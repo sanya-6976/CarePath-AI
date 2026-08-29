@@ -2,16 +2,21 @@
 CarePath AI - Agent Orchestration Endpoints
 ===========================================
 Exposes REST endpoints to trigger the 11-agent LangGraph workflow, retrieve graph state,
-and inspect agent specifications.
+stream reasoning events, and inspect agent specifications.
 """
 
+import json
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.agents.graph import run_carepath_agents
+from app.agents.graph import run_carepath_agents, stream_carepath_agents
 from app.agents.specs import AGENT_SPECIFICATIONS
 from app.core.logging import logger
+from database.connections import get_db
+from sqlalchemy.orm import Session
+from app.services import analysis_service
 
 router = APIRouter(prefix="/agents", tags=["Agent Orchestration"])
 
@@ -51,7 +56,7 @@ async def orchestrate_agents(payload: OrchestrationRequest):
     """
     logger.info("Starting Multi-Agent Orchestration", session_id=payload.session_id, prompt=payload.raw_prompt[:60])
     try:
-        final_state = run_carepath_agents(
+        final_state = await run_carepath_agents(
             session_id=payload.session_id,
             patient_id=payload.patient_id,
             raw_prompt=payload.raw_prompt,
@@ -59,7 +64,6 @@ async def orchestrate_agents(payload: OrchestrationRequest):
             doc_urls=payload.uploaded_doc_urls
         )
 
-        # Helper to convert pydantic/dataclass models to dict if necessary
         def to_dict(obj):
             if hasattr(obj, "dict"):
                 return obj.dict()
@@ -89,6 +93,69 @@ async def orchestrate_agents(payload: OrchestrationRequest):
     except Exception as e:
         logger.error("Multi-Agent Orchestration Failed", error=str(e))
         raise HTTPException(status_code=500, detail=f"Agent workflow error: {str(e)}")
+
+
+@router.post("/orchestrate/stream")
+async def stream_orchestrate_agents(
+    payload: OrchestrationRequest, 
+    db: Session = Depends(get_db)
+):
+    """
+    Triggers the autonomous 11-agent LangGraph orchestration pipeline and streams progress via SSE.
+    """
+    logger.info("Starting Multi-Agent Orchestration Stream", session_id=payload.session_id)
+
+    async def event_generator():
+        try:
+            yield f"data: {json.dumps({'status': 'started', 'agent': 'supervisor'})}\n\n"
+            
+            current_state = {
+                "session_id": payload.session_id,
+                "patient_id": payload.patient_id,
+                "raw_prompt": payload.raw_prompt,
+                "uploaded_image_urls": payload.uploaded_image_urls,
+                "uploaded_doc_urls": payload.uploaded_doc_urls,
+                "is_emergency": False,
+                "execution_history": []
+            }
+
+            async for event in stream_carepath_agents(
+                session_id=payload.session_id,
+                patient_id=payload.patient_id,
+                raw_prompt=payload.raw_prompt,
+                image_urls=payload.uploaded_image_urls,
+                doc_urls=payload.uploaded_doc_urls
+            ):
+                if isinstance(event, dict):
+                    for node_name, state_diff in event.items():
+                        current_state.update(state_diff)
+                        exec_history = state_diff.get("execution_history", [])
+                        last_exec = exec_history[-1] if exec_history else {}
+                        
+                        event_data = {
+                            'status': 'completed', 
+                            'agent': node_name,
+                            'reason_for_execution': last_exec.get('reason_for_execution', ''),
+                            'user_action_required': last_exec.get('user_action_required', ''),
+                            'state_status': last_exec.get('status', 'SUCCESS')
+                        }
+                        
+                        yield f"data: {json.dumps(event_data)}\n\n"
+            
+            try:
+                analysis = analysis_service.start_analysis(db, payload.patient_id, current_state)
+                db.commit()
+                yield f"data: {json.dumps({'status': 'done', 'analysis_id': str(analysis.analysis_id)})}\n\n"
+            except Exception as e:
+                db.rollback()
+                logger.error("Failed to save analysis during stream", error=str(e))
+                yield f"data: {json.dumps({'status': 'error', 'message': 'Failed to save analysis'})}\n\n"
+                
+        except Exception as e:
+            logger.error("Multi-Agent Orchestration Stream Failed", error=str(e))
+            yield f"data: {json.dumps({'status': 'error', 'message': str(e)})}\n\n"
+            
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @router.get("/specs")

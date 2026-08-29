@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from src.agents.state import CarePathState, SpecialistReferral, UrgencyCategory
@@ -13,7 +14,7 @@ class ReferralAgent:
     """
 
     def __init__(self, gemini_api_key: Optional[str] = None):
-        self.api_key = gemini_api_key or settings.GEMINI_API_KEY
+        self.api_key = gemini_api_key or getattr(settings, "GEMINI_API_KEY", None)
 
     async def generate_specialist_referral(self, state: CarePathState) -> SpecialistReferral:
         logger.info("referral_agent_routing_specialist", encounter_id=state.get("encounter_id"))

@@ -12,6 +12,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const demoAccessEnabled = !import.meta.env.PROD && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true';
+
+  const continueWithDemo = () => {
+    authLogin('demo_token', {
+      id: 'demo_user',
+      email: 'demo@carepath.ai',
+      name: 'Demo Patient',
+      role: 'patient',
+    }, 'demo_patient_id');
+    navigate('/dashboard');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +47,6 @@ export default function LoginPage() {
       };
       const pId = data.patient_id || data.patient?.id || userProfile.id;
 
-      // Update AuthContext state
       authLogin(token, userProfile, pId);
 
       navigate('/dashboard');
@@ -46,7 +57,7 @@ export default function LoginPage() {
           ? 'Cannot connect to backend server. Ensure the API service is running at https://carepath-ai-production-508e.up.railway.app.'
           : err.message || 'Login failed. Please verify your email and password.'
       );
-    } finally {
+    } fontIsLoading: {
       setIsLoading(false);
     }
   };
@@ -66,7 +77,6 @@ export default function LoginPage() {
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Email Field */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-brand-slate px-1">Email Address</label>
           <div className="relative">
@@ -82,7 +92,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Password Field */}
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-center px-1">
             <label className="text-xs font-semibold text-brand-slate">Password</label>
@@ -107,7 +116,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={isLoading}
@@ -118,7 +126,6 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {/* Alternative actions */}
       <div className="mt-6 flex flex-col gap-3 text-center border-t border-brand-slate/10 pt-5">
         <span className="text-xs text-brand-slate">
           Don't have an account?{' '}
@@ -126,6 +133,15 @@ export default function LoginPage() {
             Create account
           </Link>
         </span>
+        {demoAccessEnabled && (
+          <button
+            type="button"
+            onClick={continueWithDemo}
+            className="text-xs text-brand-slate hover:text-brand-lavender font-semibold underline underline-offset-4"
+          >
+            Continue with local demo access
+          </button>
+        )}
       </div>
     </div>
   );

@@ -36,26 +36,23 @@ export default function LoginPage() {
 
       const data = await response.json();
       
-      // Save credentials & patient info
-      localStorage.setItem('carepath_token', data.token || data.access_token || 'mock_token');
-      if (data.patient?.id) {
-        localStorage.setItem('carepath_patient_id', data.patient.id);
-      } else if (data.patient_id) {
-        localStorage.setItem('carepath_patient_id', data.patient_id);
-      } else {
-        localStorage.setItem('carepath_patient_id', 'default_patient_id');
+      const token = data.token || data.access_token || 'mock_token';
+      localStorage.setItem('carepath_token', token);
+
+      const patientId = data.user?.id || data.patient?.id || data.patient_id || 'demo_patient_id';
+      if (patientId) {
+        localStorage.setItem('carepath_patient_id', patientId);
       }
 
       navigate('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
-      // Helpful message for hackathon offline testing
       setError(
         err.message === 'Failed to fetch'
           ? 'Cannot connect to backend server. Ensure the API service is running on local host.'
           : err.message || 'Login failed. Please try again.'
       );
-    } finally {
+    } fontIsLoading: {
       setIsLoading(false);
     }
   };
@@ -75,7 +72,6 @@ export default function LoginPage() {
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Email Field */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-brand-slate px-1">Email Address</label>
           <div className="relative">
@@ -91,7 +87,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Password Field */}
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-center px-1">
             <label className="text-xs font-semibold text-brand-slate">Password</label>
@@ -116,7 +111,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={isLoading}
@@ -127,7 +121,6 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {/* Alternative actions */}
       <div className="mt-6 flex flex-col gap-3 text-center border-t border-brand-slate/10 pt-5">
         <span className="text-xs text-brand-slate">
           Don't have an account?{' '}

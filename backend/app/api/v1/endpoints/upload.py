@@ -18,7 +18,7 @@ async def upload_document(
             session=db,
             file_bytes=content,
             filename=file.filename or "uploaded_document",
-            user_id=patient_id,
+            user_id=patient_id or "demo_user",
             category=category
         )
     except Exception as e:
@@ -35,7 +35,7 @@ async def upload_image(
         session=db,
         file_bytes=content,
         filename=file.filename or "uploaded_image.png",
-        user_id=patient_id,
+        user_id=patient_id or "demo_user",
         category="Imaging/Scan"
     )
 
@@ -50,7 +50,7 @@ async def upload_report(
         session=db,
         file_bytes=content,
         filename=file.filename or "uploaded_report.pdf",
-        user_id=patient_id,
+        user_id=patient_id or "demo_user",
         category="Medical Report"
     )
 
@@ -65,6 +65,6 @@ async def upload_prescription(
         session=db,
         file_bytes=content,
         filename=file.filename or "uploaded_prescription.pdf",
-        user_id=patient_id,
+        user_id=patient_id or "demo_user",
         category="Prescription"
     )

@@ -30,7 +30,7 @@ export default function DoctorBridgePage() {
   const [customQuestionText, setCustomQuestionText] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Doctor Form State (Simulation)
+  // Doctor Form State
   const [recommendationOutcome, setRecommendationOutcome] = useState<'confirm' | 'modify'>('confirm');
   const [modifiedSpecialist, setModifiedSpecialist] = useState('Allergist / Immunologist');
   const [doctorNote, setDoctorNote] = useState(
@@ -50,7 +50,6 @@ export default function DoctorBridgePage() {
   const loadData = () => {
     setQuestions(doctorBridgeService.getQuestions());
     
-    // Read uploaded documents
     const storedDocsRaw = localStorage.getItem('carepath_uploaded_docs');
     const storedDocs = storedDocsRaw ? JSON.parse(storedDocsRaw) : [];
     setUploadedDocs(storedDocs);
@@ -59,7 +58,6 @@ export default function DoctorBridgePage() {
     setCurrentReview(review);
     
     if (review) {
-      // If already reviewed, default to Step 4 (Approved Feedback)
       setActiveStep(4);
       setRecommendationOutcome(review.recommendation === 'confirm' ? 'confirm' : 'modify');
       setDoctorNote(review.doctorNote);
@@ -80,7 +78,6 @@ export default function DoctorBridgePage() {
   useEffect(() => {
     loadData();
 
-    // Listen for updates from other views (e.g. Dashboard resets)
     window.addEventListener('doctor_review_updated', loadData);
     return () => {
       window.removeEventListener('doctor_review_updated', loadData);
@@ -140,8 +137,7 @@ export default function DoctorBridgePage() {
   const patientName = patient?.name || user?.name || 'Jane Doe';
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Header */}
+    <div className="flex flex-col gap-8 animate-in fade-in duration-300">
       {currentReview && (
         <div className="flex items-center justify-end gap-4 flex-wrap border-b border-brand-slate/10 pb-4">
           <button
@@ -154,7 +150,6 @@ export default function DoctorBridgePage() {
         </div>
       )}
 
-      {/* Progress Tracker Stepper (Navigation Block) */}
       <div className="bg-brand-card border border-brand-slate/10 p-4 rounded-2xl shadow-xxs">
         <div className="flex flex-col md:flex-row justify-between gap-4">
           {[
@@ -189,10 +184,7 @@ export default function DoctorBridgePage() {
         </div>
       </div>
 
-      {/* Dynamic Step Panel Content */}
       <div className="bg-brand-card border border-brand-slate/10 p-6 md:p-8 rounded-3xl shadow-sm flex flex-col gap-6 animate-in fade-in duration-300">
-        
-        {/* STEP 1: PATIENT BRIEF */}
         {activeStep === 1 && (
           <div className="flex flex-col gap-6 animate-in slide-in-from-top-2 duration-200">
             <div className="border-b border-brand-slate/10 pb-4">
@@ -201,7 +193,6 @@ export default function DoctorBridgePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Patient Overview & Symptoms */}
               <div className="flex flex-col gap-5">
                 <div className="bg-brand-bg/50 border border-brand-slate/5 p-5 rounded-2xl flex flex-col gap-3">
                   <h4 className="text-[10px] font-bold text-brand-slate uppercase tracking-wider border-b border-brand-slate/10 pb-1.5">Patient Overview</h4>
@@ -237,7 +228,6 @@ export default function DoctorBridgePage() {
                 </div>
               </div>
 
-              {/* Treatment History & Records */}
               <div className="flex flex-col gap-5">
                 <div className="bg-brand-bg/50 border border-brand-slate/5 p-5 rounded-2xl flex flex-col gap-3">
                   <h4 className="text-[10px] font-bold text-brand-slate uppercase tracking-wider border-b border-brand-slate/10 pb-1.5 flex justify-between items-center">
@@ -317,7 +307,6 @@ export default function DoctorBridgePage() {
               </div>
             </div>
 
-            {/* AI Suggestion block (passive clinical suggestion terminology) */}
             <div className="bg-brand-lavender-light/35 border-l-2 border-brand-lavender p-5 rounded-r-2xl flex gap-3 mt-2">
               <Brain className="w-5 h-5 text-brand-lavender shrink-0 mt-0.5" />
               <div>
@@ -332,7 +321,6 @@ export default function DoctorBridgePage() {
               </div>
             </div>
 
-            {/* CTA */}
             <div className="flex justify-end mt-4">
               <button
                 onClick={() => setActiveStep(2)}
@@ -345,7 +333,6 @@ export default function DoctorBridgePage() {
           </div>
         )}
 
-        {/* STEP 2: CASE-SPECIFIC QUESTIONS */}
         {activeStep === 2 && (
           <div className="flex flex-col gap-6 animate-in slide-in-from-top-2 duration-200">
             <div className="border-b border-brand-slate/10 pb-4">
@@ -353,7 +340,6 @@ export default function DoctorBridgePage() {
               <p className="text-brand-slate text-[11px] font-light mt-0.5">Copy or track diagnostic questions compiled from your clinical history.</p>
             </div>
 
-            {/* Question checklist */}
             <div className="flex flex-col gap-4">
               {questions.map((q) => (
                 <div 
@@ -397,7 +383,6 @@ export default function DoctorBridgePage() {
               ))}
             </div>
 
-            {/* Custom Question Form */}
             <form onSubmit={handleAddQuestion} className="bg-brand-bg/40 border border-brand-slate/5 p-4 rounded-2xl flex flex-col gap-3">
               <label className="text-[10px] font-bold text-brand-slate uppercase tracking-wider block">Add My Own Question</label>
               <div className="flex gap-2.5">
@@ -418,7 +403,6 @@ export default function DoctorBridgePage() {
               </div>
             </form>
 
-            {/* CTA */}
             <div className="flex justify-between items-center mt-4">
               <button
                 onClick={() => setActiveStep(1)}
@@ -437,7 +421,6 @@ export default function DoctorBridgePage() {
           </div>
         )}
 
-        {/* STEP 3: DOCTOR REVIEW INTERFACE (SIMULATOR) */}
         {activeStep === 3 && (
           <div className="flex flex-col gap-6 animate-in slide-in-from-top-2 duration-200">
             <div className="border-b border-brand-slate/10 pb-4">
@@ -449,7 +432,6 @@ export default function DoctorBridgePage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-              {/* Left 3 columns: Summary review */}
               <div className="lg:col-span-3 flex flex-col gap-5">
                 <div className="border border-brand-slate/10 p-5 rounded-2xl flex flex-col gap-3 bg-brand-bg/30">
                   <h4 className="text-[10px] font-bold text-brand-slate uppercase block tracking-wider border-b border-brand-slate/5 pb-1">AI Recommendation Mapping</h4>
@@ -459,7 +441,6 @@ export default function DoctorBridgePage() {
                   </div>
                 </div>
 
-                {/* Confirm/Modify inputs */}
                 <div className="flex flex-col gap-4">
                   <label className="text-[10px] font-bold text-brand-slate uppercase tracking-wider">Clinical Referral Assessment</label>
                   <div className="flex gap-4">
@@ -509,7 +490,6 @@ export default function DoctorBridgePage() {
                   </div>
                 )}
 
-                {/* Doctor Note */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-brand-slate uppercase tracking-wider">Clinical Practitioner Note</label>
                   <textarea
@@ -522,9 +502,7 @@ export default function DoctorBridgePage() {
                 </div>
               </div>
 
-              {/* Right 2 columns: Checklists & signing */}
               <div className="lg:col-span-2 flex flex-col gap-5">
-                {/* Checklists */}
                 <div className="bg-brand-bg/40 border border-brand-slate/5 p-5 rounded-2xl flex flex-col gap-3">
                   <h4 className="text-[10px] font-bold text-brand-slate uppercase block tracking-wider border-b border-brand-slate/5 pb-1">Recommended Actions</h4>
                   
@@ -555,7 +533,6 @@ export default function DoctorBridgePage() {
                   </div>
                 </div>
 
-                {/* Follow-up date */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-brand-slate uppercase tracking-wider">Follow-up Review Date</label>
                   <input
@@ -566,7 +543,6 @@ export default function DoctorBridgePage() {
                   />
                 </div>
 
-                {/* Signing Practitioner Name */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-brand-slate uppercase tracking-wider">Practitioner Name / Signature</label>
                   <input
@@ -580,7 +556,6 @@ export default function DoctorBridgePage() {
               </div>
             </div>
 
-            {/* CTA */}
             <div className="flex justify-between items-center mt-4 border-t border-brand-slate/5 pt-4">
               <button
                 onClick={() => setActiveStep(2)}
@@ -600,7 +575,6 @@ export default function DoctorBridgePage() {
           </div>
         )}
 
-        {/* STEP 4: APPROVED FEEDBACK */}
         {activeStep === 4 && (
           <div className="flex flex-col gap-6 animate-in slide-in-from-top-2 duration-200">
             <div className="border-b border-brand-slate/10 pb-4">
@@ -611,7 +585,6 @@ export default function DoctorBridgePage() {
               <p className="text-brand-slate text-[11px] font-light mt-0.5">CarePath recommendation overridden and signed off by your attending physician.</p>
             </div>
 
-            {/* Clinical Validation card */}
             <div className="border border-brand-sage-text/20 bg-brand-sage-bg/5 p-6 rounded-3xl flex flex-col md:flex-row gap-5 items-start">
               <div className="w-12 h-12 rounded-xl bg-brand-sage-bg text-brand-sage-text flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
@@ -648,9 +621,7 @@ export default function DoctorBridgePage() {
               </div>
             </div>
 
-            {/* Doctor Note display */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              {/* Note */}
               <div className="md:col-span-3 border border-brand-slate/10 p-5 rounded-2xl flex flex-col gap-2 bg-brand-bg/30">
                 <span className="text-[10px] font-bold text-brand-slate uppercase tracking-wider block">Physician Clinical Assessment Note</span>
                 <p className="text-xs text-brand-plum leading-relaxed font-light italic">
@@ -658,7 +629,6 @@ export default function DoctorBridgePage() {
                 </p>
               </div>
 
-              {/* Verified Checklist */}
               <div className="md:col-span-2 bg-brand-bg/50 border border-brand-slate/5 p-5 rounded-2xl flex flex-col gap-3">
                 <span className="text-[10px] font-bold text-brand-slate uppercase block tracking-wider border-b border-brand-slate/10 pb-1.5">Approved Next Action Steps</span>
                 <div className="flex flex-col gap-2">
@@ -679,7 +649,6 @@ export default function DoctorBridgePage() {
               </div>
             </div>
 
-            {/* Return link */}
             <div className="flex justify-between items-center mt-4 border-t border-brand-slate/10 pt-4">
               <Link 
                 to="/dashboard"
@@ -691,7 +660,6 @@ export default function DoctorBridgePage() {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

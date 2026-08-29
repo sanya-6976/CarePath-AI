@@ -115,6 +115,15 @@ class AgentExecutionLog(BaseModel):
     error_message: Optional[str] = None
 
 
+class AgentStatus(BaseModel):
+    agent_name: str
+    status: str # "Waiting", "Running", "Completed", "Warning", "Failed", "Skipped"
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    summary: Optional[str] = None
+    reason_for_execution: Optional[str] = None
+    user_action_required: Optional[str] = None
+
+
 class CarePathState(TypedDict):
     """
     Central Shared Graph State for CarePath AI Multi-Agent Architecture.
@@ -138,6 +147,13 @@ class CarePathState(TypedDict):
     demographics: Dict[str, Any]
     vision_results: List[VisionResultItem]
     ocr_results: List[DocOCRResultItem]
+    
+    # 3.5 Historical Context (Phase 2)
+    historical_context: List[Dict[str, Any]]
+    previous_analysis: Optional[Dict[str, Any]]
+    changed_factors: Optional[List[str]]
+    new_information: Optional[List[str]]
+    missing_information: Optional[List[str]]
     
     # 4. Patient Chronology & Synthesis
     patient_timeline: List[TimelineEvent]
@@ -166,5 +182,6 @@ class CarePathState(TypedDict):
     # 9. System Diagnostics & Observability
     alerts: List[AgentAlert]
     execution_history: List[AgentExecutionLog]
+    agent_status_tracking: Dict[str, AgentStatus]
     next_agent: str
     error_state: Optional[str]

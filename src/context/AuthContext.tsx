@@ -56,7 +56,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setPatientId(storedPid || 'demo_patient_id');
         try {
           if (token === 'demo_token') {
-            // Mock profile for demo mode
             setUser({
               id: 'demo_user',
               email: 'demo@carepath.ai',
@@ -65,9 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             const profile = await authService.getProfile();
             setUser(profile);
+            setPatientId(storedPid || profile.id || null);
           }
         } catch (err) {
-          console.error('Auto login check failed:', err);
+          console.error('Session validation failed:', err);
           logout();
         }
       }
@@ -76,7 +76,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
-    // Listen for auth expiration events from apiClient
     const handleAuthExpired = () => {
       logout();
     };

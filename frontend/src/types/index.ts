@@ -57,8 +57,10 @@ export type AgentName =
   | 'Follow-up';
 
 export interface AgentState {
-  status: 'idle' | 'running' | 'completed' | 'failed';
+  status: 'idle' | 'running' | 'completed' | 'failed' | 'skipped';
   message?: string;
+  reason_for_execution?: string;
+  user_action_required?: string;
   updated_at?: string;
 }
 

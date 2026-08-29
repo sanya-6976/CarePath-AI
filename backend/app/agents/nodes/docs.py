@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
@@ -20,7 +21,7 @@ class MedicalDocsAgent:
     """
 
     def __init__(self, gemini_api_key: Optional[str] = None):
-        self.api_key = gemini_api_key or settings.GEMINI_API_KEY
+        self.api_key = gemini_api_key or getattr(settings, "GEMINI_API_KEY", None)
 
     async def process_document(
         self, attachment_id: str, file_path: str, mime_type: str
@@ -31,14 +32,7 @@ class MedicalDocsAgent:
             file_path=file_path,
         )
 
-        if not self.api_key or settings.APP_ENV == "development":
-            return self._fallback_ocr_extraction(attachment_id)
-
-        try:
-            return self._fallback_ocr_extraction(attachment_id)
-        except Exception as exc:
-            logger.error("medical_docs_ocr_error", attachment_id=attachment_id, error=str(exc))
-            return self._fallback_ocr_extraction(attachment_id)
+        return self._fallback_ocr_extraction(attachment_id)
 
     def _fallback_ocr_extraction(self, attachment_id: str) -> DocOCRResultItem:
         return DocOCRResultItem(
@@ -63,10 +57,31 @@ async def docs_node(state: CarePathState) -> Dict[str, Any]:
     logger.info("executing_docs_node", encounter_id=encounter_id)
 
     attachments = state.get("attachments", [])
+    uploaded_doc_urls = state.get("uploaded_doc_urls", [])
     ocr_results = list(state.get("ocr_results", []))
-    agent = MedicalDocsAgent()
+    execution_history = state.get("execution_history", [])
 
+    has_docs = any(att.file_type == AttachmentType.DOCUMENT for att in attachments) or len(uploaded_doc_urls) > 0
+
+    if not has_docs:
+        logger.info("docs_node_skipped", reason="No documents uploaded")
+        execution_history.append({
+            "step_id": f"step_docs_{len(execution_history)}",
+            "agent_name": "MedicalDocsAgent",
+            "started_at": datetime.utcnow().isoformat(),
+            "completed_at": datetime.utcnow().isoformat(),
+            "status": "SKIPPED",
+            "reason_for_execution": "Skipped because no medical document was uploaded",
+            "state_delta_keys": [],
+            "error_message": None,
+        })
+        return {
+            "execution_history": execution_history,
+        }
+
+    agent = MedicalDocsAgent()
     updated_attachments = []
+    
     for att in attachments:
         if att.file_type == AttachmentType.DOCUMENT and not att.processed:
             try:
@@ -82,13 +97,25 @@ async def docs_node(state: CarePathState) -> Dict[str, Any]:
                 logger.error("docs_node_processing_failed", attachment_id=att.attachment_id, error=str(exc))
         updated_attachments.append(att)
 
-    execution_history = state.get("execution_history", [])
+    if not attachments and uploaded_doc_urls:
+        for url in uploaded_doc_urls:
+            try:
+                res = await agent.process_document(
+                    attachment_id=str(url),
+                    file_path=str(url),
+                    mime_type="application/pdf",
+                )
+                ocr_results.append(res)
+            except Exception as exc:
+                logger.error("docs_node_url_processing_failed", url=url, error=str(exc))
+
     execution_history.append({
         "step_id": f"step_docs_{len(execution_history)}",
         "agent_name": "MedicalDocsAgent",
-        "started_at": datetime.utcnow(),
-        "completed_at": datetime.utcnow(),
+        "started_at": datetime.utcnow().isoformat(),
+        "completed_at": datetime.utcnow().isoformat(),
         "status": "SUCCESS",
+        "reason_for_execution": "Medical document uploaded",
         "state_delta_keys": ["ocr_results", "attachments"],
         "error_message": None,
     })

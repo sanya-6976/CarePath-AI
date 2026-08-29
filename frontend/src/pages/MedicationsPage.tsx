@@ -16,7 +16,6 @@ export default function MedicationsPage() {
   useEffect(() => {
     loadMedData();
 
-    // Listen for medication updates from other views (e.g. Dashboard)
     window.addEventListener('medication_updated', loadMedData);
     return () => {
       window.removeEventListener('medication_updated', loadMedData);
@@ -42,14 +41,10 @@ export default function MedicationsPage() {
   const missedMeds = medications.filter(m => m.status === 'missed');
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Adherence Summary Panel */}
+    <div className="flex flex-col gap-8 animate-in fade-in duration-300">
       <div className="bg-brand-card border border-brand-slate/10 p-6 md:p-8 rounded-3xl shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-        
-        {/* Left Side: Circular Adherence Meter */}
         <div className="flex flex-col items-center justify-center text-center gap-3 border-r border-brand-slate/10 pr-0 md:pr-6 md:border-r">
           <div className="relative w-28 h-28 flex items-center justify-center">
-            {/* SVG circle track */}
             <svg className="w-full h-full transform -rotate-90">
               <circle
                 cx="56"
@@ -79,7 +74,6 @@ export default function MedicationsPage() {
           </p>
         </div>
 
-        {/* Middle: Breakdown Stats */}
         <div className="grid grid-cols-2 gap-4 flex-1">
           <div className="bg-brand-bg/50 border border-brand-slate/5 p-4 rounded-2xl flex flex-col justify-between min-h-[90px]">
             <span className="text-[10px] font-bold text-brand-slate uppercase block mb-1">Taken Doses</span>
@@ -98,7 +92,6 @@ export default function MedicationsPage() {
           </div>
         </div>
 
-        {/* Right Side: Quick Action Advice */}
         <div className="bg-brand-lavender-light/35 border border-brand-lavender/10 p-5 rounded-2xl flex gap-3 h-full justify-center flex-col">
           <div className="flex items-center gap-1.5 text-brand-lavender font-bold text-xs uppercase tracking-wider">
             <TrendingUp className="w-4 h-4" />
@@ -110,9 +103,7 @@ export default function MedicationsPage() {
         </div>
       </div>
 
-      {/* Grid: Active Medications & Sidebars */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left: Medications List (2 Cols) */}
         <div className="lg:col-span-2 flex flex-col gap-5">
           <div className="flex items-center justify-between border-b border-brand-slate/10 pb-3">
             <h3 className="font-display font-bold text-sm text-brand-plum flex items-center gap-2">
@@ -136,9 +127,7 @@ export default function MedicationsPage() {
           </div>
         </div>
 
-        {/* Right Sidebar: Today's Status & Warnings */}
         <div className="flex flex-col gap-6">
-          {/* Dosing Warnings / Alerts */}
           {missedMeds.length > 0 && (
             <div className="bg-brand-rose-bg border border-brand-rose-text/15 p-5 rounded-3xl flex flex-col gap-3 shadow-xxs">
               <div className="flex items-center gap-2 text-brand-rose-text font-bold text-xs">
@@ -159,7 +148,6 @@ export default function MedicationsPage() {
             </div>
           )}
 
-          {/* Reset Daily Logs Action */}
           <button
             onClick={resetDailyTracker}
             className="w-full text-center text-xxs font-bold text-brand-lavender hover:text-brand-lavender-hover border border-brand-lavender/20 py-2.5 rounded-xl bg-brand-lavender-light/10 transition-all cursor-pointer shadow-xxs"
@@ -167,7 +155,6 @@ export default function MedicationsPage() {
             Reset Logs
           </button>
 
-          {/* Today's Schedule Overview */}
           <div className="bg-brand-card border border-brand-slate/10 p-5 rounded-3xl shadow-sm flex flex-col gap-4">
             <h4 className="font-display text-xs font-bold tracking-wider text-brand-slate uppercase border-b border-brand-slate/10 pb-2 flex items-center gap-2">
               <Clock className="w-4 h-4 text-brand-lavender" />

@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from src.agents.state import CarePathState, TimelineEvent
@@ -13,12 +14,26 @@ class TimelineAgent:
     """
 
     def __init__(self, gemini_api_key: Optional[str] = None):
-        self.api_key = gemini_api_key or settings.GEMINI_API_KEY
+        self.api_key = gemini_api_key or getattr(settings, "GEMINI_API_KEY", None)
 
     async def construct_patient_timeline(self, state: CarePathState) -> List[TimelineEvent]:
         logger.info("timeline_agent_constructing_chronology", encounter_id=state.get("encounter_id"))
         
         events: List[TimelineEvent] = []
+
+        # The medical router injects only this patient's persisted updates into
+        # state. Include them before current inputs so the agent's chronology is
+        # genuinely longitudinal, rather than reconstructing a current-only view.
+        for historical in state.get("historical_context", []):
+            content = str(historical.get("content", "")).strip()
+            if content:
+                events.append(TimelineEvent(
+                    event_id=f"evt_history_{len(events)}",
+                    timestamp_description=historical.get("date") or "Prior CarePath update",
+                    event_type=str(historical.get("type") or "PATIENT_UPDATE").upper(),
+                    description=content,
+                    source_agent="LongitudinalContext",
+                ))
 
         # 1. Add Chief Complaint Onset Event
         duration = state.get("symptoms_duration") or "Initial Onset"

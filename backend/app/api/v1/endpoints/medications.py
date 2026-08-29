@@ -25,7 +25,7 @@ class MedicationCreate(BaseModel):
 class MedicationStatusUpdate(BaseModel):
     status: str
 
-@router.post("/", status_code=21)
+@router.post("/", status_code=201)
 def create_medication(data: MedicationCreate, db: Session = Depends(get_db)):
     medication = medication_service.add_medication(db, data.model_dump())
     return medication
@@ -52,4 +52,3 @@ def update_medication_status(
 @router.get("/{patient_id}/adherence")
 def get_medication_adherence(patient_id: str, db: Session = Depends(get_db)):
     return medication_service.get_medication_adherence(db, patient_id)
-

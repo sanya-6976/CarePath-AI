@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from src.agents.state import CarePathState, FollowUpSchedule, UrgencyCategory
@@ -13,7 +14,7 @@ class FollowUpAgent:
     """
 
     def __init__(self, gemini_api_key: Optional[str] = None):
-        self.api_key = gemini_api_key or settings.GEMINI_API_KEY
+        self.api_key = gemini_api_key or getattr(settings, "GEMINI_API_KEY", None)
 
     async def calculate_follow_up_schedule(self, state: CarePathState) -> FollowUpSchedule:
         logger.info("follow_up_agent_calculating_schedule", encounter_id=state.get("encounter_id"))

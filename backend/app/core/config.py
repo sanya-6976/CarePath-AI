@@ -25,15 +25,15 @@ class Settings(BaseSettings):
     # Security & Authentication
     SECRET_KEY: str = "super_secret_temporary_key_change_in_production_1234567890"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    PASSWORD_SALT: str = "carepath_security_salt_2026"
 
     # Network & Server
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
-
 
     # Database Settings
     POSTGRES_USER: str = "carepath_admin"

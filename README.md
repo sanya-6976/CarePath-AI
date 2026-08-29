@@ -1756,3 +1756,67 @@ Healthcare Navigation System: Active
 
 Made with ❤️ by the CarePath AI Team.
 
+---
+
+# Engineering setup and validation
+
+## Architecture
+
+The active patient application is mounted from `backend.app.main` and follows:
+
+```text
+React frontend → FastAPI → JWT/ownership guard → medical router
+→ LangGraph clinical workflow → persisted patient data
+```
+
+The Companion is mounted once in the authenticated frontend layout. It explains existing patient-scoped information and hands new symptoms, treatment failure, symptom changes, and urgent concerns to the existing medical workflow. It is not a second clinical workflow.
+
+## Secure local configuration
+
+Copy `.env.example` to `.env`, then replace every placeholder. Do not use `.env.example` as a live configuration file.
+
+```env
+JWT_SECRET_KEY=<random value, 32+ characters>
+PASSWORD_SALT=<random value, 16+ characters>
+DATABASE_URL=<test or production database URL>
+GEMINI_API_KEY=<optional; Companion uses safe record-grounded fallback when unavailable>
+POSTGRES_USER=<database user>
+POSTGRES_PASSWORD=<database password>
+POSTGRES_DB=<database name>
+```
+
+Passwords are stored with PBKDF2-HMAC-SHA256; API resources are scoped to the authenticated JWT subject. The product never replaces clinical care, provides definitive diagnosis, or prescribes medication.
+
+## Run
+
+Use a clean Python environment supported by the project's dependencies (Python 3.11 or 3.12 is recommended for the Docker images), then:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r backend/requirements.txt
+python -m pip install langgraph python-dotenv
+uvicorn backend.app.main:app --reload
+
+npm --prefix frontend ci
+npm --prefix frontend run dev
+```
+
+For Docker development, create `.env` first, then run `docker compose up --build`. Compose now starts `backend.app.main` and intentionally refuses placeholder secret configuration.
+
+## Testing
+
+```powershell
+python -m pytest tests -q
+npm --prefix frontend run lint
+npm --prefix frontend run build
+```
+
+The current validation status and reproducible E2E plan are documented in [FINAL_ENGINEERING_VALIDATION_REPORT.md](FINAL_ENGINEERING_VALIDATION_REPORT.md) and [E2E_TEST_PLAN.md](E2E_TEST_PLAN.md).
+
+## Current limitations
+
+- Vision, OCR, RAG, and Gemini integrations are implemented interfaces but are **not clinically validated**.
+- Runtime API, database, LangGraph, browser E2E, voice, and performance verification require a working configured environment.
+- The Companion's browser voice features depend on browser speech APIs; no server-side speech service is claimed.
+

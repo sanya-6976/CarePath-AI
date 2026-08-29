@@ -9,13 +9,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml .
-
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e .[dev]
+COPY requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && (pip install --no-cache-dir -r requirements.txt || (COPY backend/requirements.txt ./backend_req.txt && pip install --no-cache-dir -r backend_req.txt))
 
 COPY . .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

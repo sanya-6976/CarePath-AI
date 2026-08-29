@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database.connections import get_db
-from backend.app.services import analytics_service
+
+try:
+    from app.services import analytics_service
+except ImportError:
+    from backend.app.services import analytics_service
 
 router = APIRouter(prefix="/analytics", tags=["Analytics & Dashboard"])
 

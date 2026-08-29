@@ -74,7 +74,7 @@ def build_carepath_graph():
 carepath_graph = build_carepath_graph()
 
 
-def run_carepath_agents(
+async def run_carepath_agents(
     session_id: str,
     patient_id: str,
     raw_prompt: str,
@@ -97,6 +97,42 @@ def run_carepath_agents(
         "clinical_timeline": [],
         "retrieved_evidence": [],
         "differential_specialties": [],
+        "historical_context": [],
+        "previous_analysis": None,
+        "changed_factors": [],
+        "new_information": [],
+        "missing_information": [],
     }
-    return carepath_graph.invoke(initial_state)
+    return await carepath_graph.ainvoke(initial_state)
 
+async def stream_carepath_agents(
+    session_id: str,
+    patient_id: str,
+    raw_prompt: str,
+    image_urls: list = None,
+    doc_urls: list = None
+):
+    """Streams the CarePath multi-agent LangGraph workflow execution."""
+    initial_state = {
+        "session_id": session_id,
+        "patient_id": patient_id,
+        "raw_prompt": raw_prompt,
+        "uploaded_image_urls": image_urls or [],
+        "uploaded_doc_urls": doc_urls or [],
+        "is_emergency": False,
+        "emergency_alerts": [],
+        "workflow_completed": False,
+        "overall_confidence": 1.0,
+        "current_agent_id": "supervisor",
+        "execution_history": [],
+        "clinical_timeline": [],
+        "retrieved_evidence": [],
+        "differential_specialties": [],
+        "historical_context": [],
+        "previous_analysis": None,
+        "changed_factors": [],
+        "new_information": [],
+        "missing_information": [],
+    }
+    async for event in carepath_graph.astream(initial_state):
+        yield event

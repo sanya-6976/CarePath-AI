@@ -11,7 +11,7 @@ from database.crud.utils import safe_uuid
 from database.crud import clinical_crud, system_crud
 from database.models import User, PatientProfile
 
-def start_analysis(session: Session, patient_id: str) -> AIAnalysis:
+def start_analysis(session: Session, patient_id: str, final_state: dict = None) -> AIAnalysis:
     now = datetime.now(timezone.utc)
     analysis_id = uuid.uuid4()
     uid = safe_uuid(patient_id)
@@ -58,12 +58,29 @@ def start_analysis(session: Session, patient_id: str) -> AIAnalysis:
         texts = [f.ocr_text for f in user_files if f.ocr_text]
         ocr_combined = "\n\n".join(texts) if texts else "Document uploaded."
         findings_text = f"Analyzed {len(user_files)} uploaded document(s): {filenames}. Context: {ocr_combined[:600]}"
-        summary_text = f"CarePath multi-agent clinical reasoning completed over uploaded records ({filenames}). Parsed medical facts integrated into longitudinal memory graph."
     else:
         findings_text = "Multi-agent CarePath orchestration initialized for patient context analysis."
-        summary_text = "CarePath multi-agent clinical reasoning pipeline launched successfully."
 
-    # 2. Create AIAnalysis record matching all PostgreSQL check & NOT NULL constraints
+    # Default mock values if final_state is missing
+    final_state = final_state or {}
+    
+    # 2. Extract values from LangGraph final_state
+    differential = final_state.get("differential_specialties", [])
+    diff_str = "\n".join([f"{idx+1}. {d.specialty_name} - {d.clinical_rationale}" for idx, d in enumerate(differential)]) if differential else "1. Unspecified Condition - Evaluation Needed"
+    
+    confidence = final_state.get("overall_confidence", 0.95)
+    risk_level = final_state.get("urgency_level", "routine").lower()
+    
+    if final_state.get("is_emergency"):
+        risk_level = "critical"
+    
+    summary_text = "CarePath multi-agent clinical reasoning completed."
+    care_plan = final_state.get("care_plan", {})
+    if hasattr(care_plan, 'plain_language_summary'):
+        summary_text = care_plan.plain_language_summary
+    elif isinstance(care_plan, dict) and care_plan.get("plain_language_summary"):
+        summary_text = care_plan.get("plain_language_summary")
+
     analysis = ai_crud.create_analysis(
         session=session,
         analysis_id=analysis_id,
@@ -71,9 +88,9 @@ def start_analysis(session: Session, patient_id: str) -> AIAnalysis:
         session_id=session_id,
         analysis_type="differential_diagnosis",
         findings=findings_text,
-        differential_list="1. Acute Bronchitis - High Probability\n2. Upper Respiratory Tract Infection - Moderate",
-        confidence_score=0.95,
-        risk_level="low",
+        differential_list=diff_str,
+        confidence_score=confidence,
+        risk_level=risk_level,
         summary=summary_text,
         evidence_sources="Uploaded Patient Medical File & Clinical Report Context",
         ai_model_version="CarePath 2.0 Multi-Agent Graph",
@@ -84,19 +101,25 @@ def start_analysis(session: Session, patient_id: str) -> AIAnalysis:
 
     # 3. Create Recommendations record in DB
     try:
+        referral = final_state.get("referral_recommendation", {})
+        
+        spec_type = getattr(referral, "primary_specialty", None) or (referral.get("primary_specialty") if isinstance(referral, dict) else "General Practitioner")
+        spec_title = f"Consult {spec_type}"
+        spec_desc = getattr(referral, "clinical_rationale", None) or (referral.get("clinical_rationale") if isinstance(referral, dict) else "Further clinical evaluation is advised.")
+        
         ai_crud.create_recommendation(
             session=session,
             recommendation_id=uuid.uuid4(),
             analysis_id=analysis_id,
             user_id=uid,
-            recommendation_type="medication",
-            specialist_type="Pulmonology / Internal Medicine",
-            title="Complete Prescribed Antibiotic Course & Inhaler Therapy",
-            description="Follow prescribed dosage schedule. Monitor peak flow and respiratory rate daily.",
-            confidence=0.92,
-            urgency="routine",
+            recommendation_type="specialist_referral",
+            specialist_type=spec_type,
+            title=spec_title,
+            description=spec_desc,
+            confidence=confidence,
+            urgency=risk_level,
             status="pending",
-            rationale="Clinical findings indicate positive therapeutic response to bronchodilators.",
+            rationale=spec_desc,
             created_at=now,
             updated_at=now
         )

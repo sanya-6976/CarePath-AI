@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from src.agents.state import CarePathState, CarePlan, UrgencyCategory
@@ -13,7 +14,7 @@ class CarePlanAgent:
     """
 
     def __init__(self, gemini_api_key: Optional[str] = None):
-        self.api_key = gemini_api_key or settings.GEMINI_API_KEY
+        self.api_key = gemini_api_key or getattr(settings, "GEMINI_API_KEY", None)
 
     async def generate_patient_care_plan(self, state: CarePathState) -> CarePlan:
         logger.info("care_plan_agent_generating_plan", encounter_id=state.get("encounter_id"))

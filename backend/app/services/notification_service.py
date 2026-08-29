@@ -8,8 +8,11 @@ from datetime import datetime, timezone
 
 from database.crud.utils import safe_uuid
 
-def get_notifications(session: Session) -> List[Notification]:
-    # Mock for user "me" since we don't have proper JWT setup in this scope
+def get_notifications(session: Session, user_id: Any = None) -> List[Notification]:
+    if user_id:
+        uid = safe_uuid(user_id)
+        if uid:
+            return session.scalars(select(Notification).where(Notification.user_id == uid)).all()
     return session.scalars(select(Notification)).all()
 
 def mark_notification_read(session: Session, notification_id: str) -> Optional[Notification]:

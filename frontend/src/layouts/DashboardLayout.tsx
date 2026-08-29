@@ -9,6 +9,7 @@ import {
   X 
 } from 'lucide-react';
 import { navigationConfig } from '../config/navigation';
+import CarePathCompanion from '../components/CarePathCompanion';
 
 export default function DashboardLayout() {
   const location = useLocation();
@@ -19,7 +20,6 @@ export default function DashboardLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => localStorage.getItem('carepath_sidebar_collapsed') === 'true');
 
-  // Example active route check
   const isActive = (path: string) => location.pathname === path;
 
   const toggleSidebar = () => {
@@ -31,7 +31,6 @@ export default function DashboardLayout() {
   };
 
   const handleLogout = () => {
-    // Implement token clearing here
     localStorage.removeItem('carepath_token');
     localStorage.removeItem('carepath_patient_id');
     navigate('/login');
@@ -40,7 +39,6 @@ export default function DashboardLayout() {
   const menuItems = navigationConfig.filter(item => item.showInSidebar && !item.isSecondary);
   const secondaryItems = navigationConfig.filter(item => item.showInSidebar && item.isSecondary);
 
-  // Helper to map paths to titles/subtitles from unified source of truth
   const getHeaderDetails = () => {
     const path = location.pathname;
     const match = navigationConfig.find(item => item.path === path);
@@ -68,7 +66,6 @@ export default function DashboardLayout() {
         }`}
       >
         <div className="flex flex-col gap-8">
-          {/* Logo acting as toggle */}
           <button 
             onClick={toggleSidebar}
             className={`flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none w-full ${
@@ -86,7 +83,6 @@ export default function DashboardLayout() {
             )}
           </button>
 
-          {/* Navigation Links */}
           <nav className="flex flex-col gap-1">
             {!isCollapsed ? (
               <span className="text-xs font-semibold tracking-wider text-brand-slate/75 uppercase px-3 mb-2 animate-in fade-in duration-200">Navigation</span>
@@ -126,7 +122,6 @@ export default function DashboardLayout() {
           </nav>
         </div>
 
-        {/* Bottom items */}
         <div className="flex flex-col gap-4">
           <nav className="flex flex-col gap-1 border-t border-brand-slate/10 pt-4">
             {secondaryItems.map((item) => {
@@ -267,9 +262,7 @@ export default function DashboardLayout() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
-        {/* Page Navbar (Header) */}
         <header className="bg-brand-card border-b border-brand-slate/10 px-6 py-4 md:px-8 md:py-4.5 sticky top-0 z-30 flex items-center justify-between">
-          {/* Left section: Hamburger (mobile only) + Title & Subtitle */}
           <div className="flex items-center min-w-0">
             <button 
               onClick={() => setMobileMenuOpen(true)}
@@ -290,9 +283,7 @@ export default function DashboardLayout() {
             </div>
           </div>
 
-          {/* Right section: Profile direct navigation link */}
           <div className="flex items-center gap-3.5 shrink-0">
-            {/* Profile Direct Link */}
             <Link
               to="/profile"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-brand-bg text-brand-plum text-sm font-semibold cursor-pointer transition-all active:scale-98 border border-transparent hover:border-brand-slate/10"
@@ -307,11 +298,11 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        {/* Dashboard Content Container */}
         <main className="flex-1 p-6 md:p-8 max-w-6xl w-full mx-auto animate-in fade-in duration-300">
           <Outlet />
         </main>
       </div>
+      <CarePathCompanion />
     </div>
   );
 }

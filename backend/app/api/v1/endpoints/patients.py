@@ -26,7 +26,26 @@ def create_patient(data: PatientData, db: Session = Depends(get_db)):
 
 @router.get("")
 def get_all_patients(db: Session = Depends(get_db)):
-    return patient_service.get_all_patients(db)
+    profiles = patient_service.get_all_patients(db)
+    result = []
+    for profile in profiles:
+        first_name = profile.first_name or ""
+        last_name = profile.last_name or ""
+        full_name = f"{first_name} {last_name}".strip() or "Patient"
+        result.append({
+            "id": str(profile.user_id),
+            "user_id": str(profile.user_id),
+            "name": full_name,
+            "first_name": first_name,
+            "last_name": last_name,
+            "age": 30,
+            "gender": profile.gender or "Male",
+            "blood_type": profile.blood_group or "O+",
+            "allergies": [],
+            "medical_history": profile.medical_summary or "",
+            "current_symptoms": ""
+        })
+    return result
 
 @router.get("/{patient_id}")
 def get_patient(patient_id: str, db: Session = Depends(get_db)):

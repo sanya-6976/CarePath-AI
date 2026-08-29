@@ -3,14 +3,27 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from src.config import settings
 from backend.app.database.models import Base
 
-# Create Async Engine for PostgreSQL / SQLite testing
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-    pool_pre_ping=True,
-    pool_recycle=300,
-)
+# Format Async Database URL
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif db_url.startswith("postgresql://") and "+asyncpg" not in db_url and "+psycopg" not in db_url:
+    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+try:
+    engine = create_async_engine(
+        db_url,
+        echo=settings.DEBUG,
+        future=True,
+        pool_pre_ping=True,
+        pool_recycle=300,
+    )
+except Exception:
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///./carepath_local.db",
+        echo=settings.DEBUG,
+        future=True,
+    )
 
 # Async Session Factory
 AsyncSessionLocal = async_sessionmaker(

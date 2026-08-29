@@ -16,6 +16,7 @@ import ProfilePage from './pages/ProfilePage';
 import UploadCenterPage from './pages/UploadCenterPage';
 import AIInvestigationPage from './pages/AIInvestigationPage';
 import RecommendationPage from './pages/RecommendationPage';
+import CareJourneyPage from './pages/CareJourneyPage';
 import TimelinePage from './pages/TimelinePage';
 import MedicalRecordsPage from './pages/MedicalRecordsPage';
 import FollowUpPage from './pages/FollowUpPage';
@@ -77,7 +78,8 @@ export default function App() {
           <Route path="/upload" element={<UploadCenterPage />} />
           <Route path="/analysis/processing" element={<AIInvestigationPage />} />
           <Route path="/analysis" element={<RecommendationPage />} />
-          <Route path="/journey" element={<TimelinePage />} />
+          <Route path="/journey" element={<CareJourneyPage />} />
+          <Route path="/timeline" element={<TimelinePage />} />
           {/* Medical Records */}
           <Route path="/records" element={<MedicalRecordsPage />} />
           {/* Medications */}

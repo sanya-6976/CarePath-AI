@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database.connections import get_db
 from app.services import analysis_service
+from app.core.security import get_current_user, verify_patient_ownership, verify_resource_ownership
+from database.models import AIAnalysis
 import uuid
 
 router = APIRouter(prefix="/analysis", tags=["Analysis"])

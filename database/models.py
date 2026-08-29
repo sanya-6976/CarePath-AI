@@ -1,4 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, Date, DateTime, Numeric, BigInteger, ForeignKey
+from datetime import datetime
+import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from database.connections import Base
@@ -28,6 +30,8 @@ class User(Base):
     medications = relationship("Medication", back_populates="user")
     feedback = relationship("Feedback", back_populates="user")
     notifications = relationship("Notification", back_populates="user")
+    companion_conversations = relationship("CompanionConversation", back_populates="user", cascade="all, delete-orphan")
+    preferences = relationship("UserPreference", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
 class PatientProfile(Base):
     __tablename__ = 'patient_profiles'
@@ -176,6 +180,12 @@ class AIAnalysis(Base):
     evidence_sources = Column(Text)
     ai_model_version = Column(String(100))
     execution_time = Column(Integer)
+
+    previous_analysis_id = Column(UUID(as_uuid=True), ForeignKey('ai_analysis.analysis_id'), nullable=True)
+    changed_factors = Column(Text, nullable=True)
+    new_information = Column(Text, nullable=True)
+    missing_information = Column(Text, nullable=True)
+    
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
@@ -183,6 +193,18 @@ class AIAnalysis(Base):
     session = relationship("SymptomSession", back_populates="analyses")
     recommendations = relationship("Recommendation", back_populates="analysis")
     care_plans = relationship("CarePlan", back_populates="analysis")
+    previous_analysis = relationship("AIAnalysis", remote_side=[analysis_id], backref="next_analyses")
+
+class PatientUpdate(Base):
+    __tablename__ = 'patient_updates'
+
+    update_id = Column(UUID(as_uuid=True), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id'))
+    update_type = Column(String(50)) # symptom, medication, document, free_text
+    content = Column(Text)
+    created_at = Column(DateTime)
+    
+    user = relationship("User")
 
 class Recommendation(Base):
     __tablename__ = 'recommendations'
@@ -373,3 +395,39 @@ class EvidenceRetrieval(Base):
     created_at = Column(DateTime)
 
     agent_run = relationship("AgentRun")
+
+# Patient-facing companion memory is deliberately separate from the medical record.
+class CompanionConversation(Base):
+    __tablename__ = 'companion_conversations'
+
+    conversation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id'), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    user = relationship("User", back_populates="companion_conversations")
+    messages = relationship("CompanionMessage", back_populates="conversation", cascade="all, delete-orphan")
+
+class CompanionMessage(Base):
+    __tablename__ = 'companion_messages'
+
+    message_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey('companion_conversations.conversation_id'), nullable=False, index=True)
+    role = Column(String(20), nullable=False)  # user or assistant
+    content = Column(Text, nullable=False)
+    language = Column(String(8), nullable=False, default='en')
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    conversation = relationship("CompanionConversation", back_populates="messages")
+
+class UserPreference(Base):
+    __tablename__ = 'user_preferences'
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id'), primary_key=True)
+    language = Column(String(8), nullable=False, default='en')
+    voice_responses = Column(Boolean, nullable=False, default=False)
+    use_carepath_history = Column(Boolean, nullable=False, default=True)
+    simple_medical_terms = Column(Boolean, nullable=False, default=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    user = relationship("User", back_populates="preferences")

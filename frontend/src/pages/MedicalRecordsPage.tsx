@@ -155,8 +155,7 @@ export default function MedicalRecordsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-6">
-
+    <div className="flex flex-col gap-8 animate-in fade-in duration-300">
       {error && (
         <div className="bg-brand-rose-bg border border-brand-rose-text/10 text-brand-rose-text p-4 rounded-xl text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -167,7 +166,6 @@ export default function MedicalRecordsPage() {
         </div>
       )}
 
-      {/* Filter Tabs */}
       <div className="flex gap-2 border-b border-brand-slate/10 pb-1">
         {(['all', 'image', 'report', 'prescription'] as const).map((cat) => {
           const Icon = getCategoryIcon(cat);
@@ -207,7 +205,6 @@ export default function MedicalRecordsPage() {
           </div>
         </div>
       ) : (
-        /* Records Grid Layout */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredRecords.map((rec) => {
             const Icon = getRecordIcon(rec.type);

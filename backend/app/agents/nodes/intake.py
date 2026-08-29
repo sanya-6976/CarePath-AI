@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -30,20 +31,53 @@ class IntakeAgent:
     """
 
     def __init__(self, gemini_api_key: Optional[str] = None):
-        self.api_key = gemini_api_key or settings.GEMINI_API_KEY
+        self.api_key = gemini_api_key or getattr(settings, "GEMINI_API_KEY", None)
 
     async def extract_clinical_entities(
         self, complaint: str, duration: Optional[str], severity: Optional[int]
     ) -> IntakeNLPAnalysisResult:
         logger.info("intake_agent_processing_complaint", complaint_length=len(complaint))
 
-        # Fallback / Mock NLP Extraction Engine when Gemini API key is not configured in local environment
-        if not self.api_key or settings.APP_ENV == "development":
-            return self._heuristic_fallback_extraction(complaint, duration, severity)
-
         try:
-            # Production Gemini API Call with Structured JSON Output
-            # Note: Production client integration uses google-generativeai client
+            prompt = f"Patient Complaint: {complaint}\nDuration: {duration}\nSeverity: {severity}"
+            system_instruction = '''
+            You are an AI Intake Agent for a clinical decision support system.
+            Extract the patient's symptoms into a structured format.
+            Return ONLY a JSON dictionary with these keys:
+            - structured_symptoms: List of objects with keys (symptom_name, duration, severity_assessment, body_site)
+            - normalized_symptom_tokens: List of strings
+            - detected_demographics: Object
+            - reported_prior_treatments: List of strings
+            - confidence_score: float
+            '''
+            try:
+                from app.core.ai_client import generate_gemini_json
+                result_dict = await generate_gemini_json(
+                    prompt=prompt,
+                    system_instruction=system_instruction,
+                    temperature=0.1
+                )
+            except Exception:
+                result_dict = None
+            
+            if result_dict:
+                entities = []
+                for s in result_dict.get("structured_symptoms", []):
+                    entities.append(ExtractedClinicalEntity(
+                        symptom_name=s.get("symptom_name", "Unknown"),
+                        duration=s.get("duration"),
+                        severity_assessment=s.get("severity_assessment"),
+                        body_site=s.get("body_site")
+                    ))
+                
+                return IntakeNLPAnalysisResult(
+                    structured_symptoms=entities,
+                    normalized_symptom_tokens=result_dict.get("normalized_symptom_tokens", []),
+                    detected_demographics=result_dict.get("detected_demographics", {}),
+                    reported_prior_treatments=result_dict.get("reported_prior_treatments", []),
+                    confidence_score=float(result_dict.get("confidence_score", 0.90))
+                )
+            
             return self._heuristic_fallback_extraction(complaint, duration, severity)
         except Exception as exc:
             logger.error("intake_agent_llm_error", error=str(exc))

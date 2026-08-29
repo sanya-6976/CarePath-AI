@@ -18,6 +18,12 @@ interface PreferencesContextType {
   setReducedMotion: (val: boolean) => void;
   highContrast: boolean;
   setHighContrast: (val: boolean) => void;
+  voiceResponses: boolean;
+  setVoiceResponses: (val: boolean) => void;
+  useCarePathHistory: boolean;
+  setUseCarePathHistory: (val: boolean) => void;
+  simpleMedicalTerms: boolean;
+  setSimpleMedicalTerms: (val: boolean) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
@@ -44,8 +50,10 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   const [highContrast, setHighContrast] = useState<boolean>(() => 
     localStorage.getItem('carepath_pref_high_contrast') === 'true'
   );
+  const [voiceResponses, setVoiceResponses] = useState(() => localStorage.getItem('carepath_pref_voice_responses') === 'true');
+  const [useCarePathHistory, setUseCarePathHistory] = useState(() => localStorage.getItem('carepath_pref_use_history') !== 'false');
+  const [simpleMedicalTerms, setSimpleMedicalTerms] = useState(() => localStorage.getItem('carepath_pref_simple_terms') !== 'false');
 
-  // Sync to localStorage
   useEffect(() => {
     localStorage.setItem('carepath_pref_language', language);
   }, [language]);
@@ -93,6 +101,10 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     }
   }, [highContrast]);
 
+  useEffect(() => { localStorage.setItem('carepath_pref_voice_responses', String(voiceResponses)); }, [voiceResponses]);
+  useEffect(() => { localStorage.setItem('carepath_pref_use_history', String(useCarePathHistory)); }, [useCarePathHistory]);
+  useEffect(() => { localStorage.setItem('carepath_pref_simple_terms', String(simpleMedicalTerms)); }, [simpleMedicalTerms]);
+
   return (
     <PreferencesContext.Provider
       value={{
@@ -108,8 +120,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
         setTextSize,
         reducedMotion,
         setReducedMotion,
-        highContrast,
-        setHighContrast
+        highContrast, setHighContrast, voiceResponses, setVoiceResponses, useCarePathHistory, setUseCarePathHistory, simpleMedicalTerms, setSimpleMedicalTerms
       }}
     >
       {children}

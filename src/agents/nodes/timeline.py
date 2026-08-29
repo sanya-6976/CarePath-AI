@@ -11,6 +11,17 @@ async def timeline_node(state: CarePathState) -> Dict[str, Any]:
 
     events: List[Dict[str, Any]] = []
 
+    for historical in state.get("historical_context", []):
+        content = str(historical.get("content", "")).strip()
+        if content:
+            events.append({
+                "event_id": f"evt_history_{len(events)}",
+                "timestamp_description": historical.get("date") or "Prior CarePath update",
+                "event_type": str(historical.get("type") or "PATIENT_UPDATE").upper(),
+                "description": content,
+                "source_agent": "LongitudinalContext",
+            })
+
     # Chief complaint onset event
     events.append({
         "event_id": "evt_complaint_0",

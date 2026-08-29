@@ -5,6 +5,7 @@ import {
   UploadCloud, 
   FolderOpen, 
   CalendarCheck, 
+  CalendarClock,
   Bell, 
   User,
   Settings,
@@ -31,9 +32,16 @@ export const navigationConfig: NavItem[] = [
   },
   {
     path: '/journey',
-    name: 'My Care Journey',
-    subtitle: 'Chronological timeline of your clinical events, uploads, and check-ins.',
+    name: 'Care Journey Map',
+    subtitle: 'Understand exactly how CarePath AI processed your information.',
     icon: Map,
+    showInSidebar: true
+  },
+  {
+    path: '/timeline',
+    name: 'Patient Timeline',
+    subtitle: 'Chronological timeline of your clinical events, uploads, and check-ins.',
+    icon: CalendarClock,
     showInSidebar: true
   },
   {

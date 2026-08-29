@@ -60,6 +60,16 @@ from app.api.v1.endpoints.doctor import router as doctor_router
 from app.api.v1.endpoints.analytics import router as analytics_router
 from app.api.v1.endpoints.records import router as records_router
 
+try:
+    from app.api.v1.endpoints.medical import router as medical_router
+except ImportError:
+    medical_router = None
+
+try:
+    from app.api.v1.endpoints.companion import router as companion_router
+except ImportError:
+    companion_router = None
+
 setup_logging()
 
 app = FastAPI(
@@ -94,6 +104,11 @@ app.include_router(memory_router, prefix=settings.API_V1_STR)
 app.include_router(doctor_router, prefix=settings.API_V1_STR)
 app.include_router(analytics_router, prefix=settings.API_V1_STR)
 app.include_router(records_router, prefix=settings.API_V1_STR)
+
+if medical_router:
+    app.include_router(medical_router, prefix=settings.API_V1_STR)
+if companion_router:
+    app.include_router(companion_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")

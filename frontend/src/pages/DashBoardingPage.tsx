@@ -42,12 +42,10 @@ export default function DashBoardingPage() {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   
-  // Interactive Follow-up State
   const [feelingLogged, setFeelingLogged] = useState<string | null>(null);
   const [symptomTrend, setSymptomTrend] = useState<'Improving' | 'Stable' | 'Declining'>('Stable');
   const [lastCheckIn, setLastCheckIn] = useState<string>('Yesterday, 6:30 PM');
 
-  // Journey stage selection state
   const [selectedStage, setSelectedStage] = useState<number>(3);
 
   const loadLocalStates = () => {
@@ -74,7 +72,6 @@ export default function DashBoardingPage() {
         const timelineData = await timelineService.getTimeline('demo_patient_id');
         setTimeline(timelineData.slice(0, 3));
 
-        // Mock Analysis
         setLatestAnalysis({
           id: 'demo_analysis_1',
           patient_id: 'demo_patient_id',
@@ -100,7 +97,6 @@ export default function DashBoardingPage() {
       console.error(err);
       setIsOffline(true);
       
-      // Load fallback local demo states in offline mode
       setLatestAnalysis({
         id: 'demo_analysis_offline',
         patient_id: 'demo_patient',
@@ -123,12 +119,10 @@ export default function DashBoardingPage() {
     loadLocalStates();
     loadDashboardData();
 
-    // Listen to updates from other pages
     window.addEventListener('medication_updated', loadLocalStates);
     window.addEventListener('timeline_updated', loadDashboardData);
     window.addEventListener('doctor_review_updated', () => {
       loadLocalStates();
-      // Auto advance to stage 5 (Doctor Approved) when review exists
       setSelectedStage(5);
     });
     return () => {
@@ -158,7 +152,6 @@ export default function DashBoardingPage() {
     localStorage.setItem('carepath_symptom_trend', trend);
     localStorage.setItem('carepath_last_check_in', checkInDateString);
 
-    // Push log to timeline
     const checkInLog = {
       patient_id: patient?.id || 'demo_patient_id',
       type: 'symptom' as const,
@@ -177,7 +170,6 @@ export default function DashBoardingPage() {
   const patientName = patient?.name || user?.name || 'Jane Doe';
   const careJourneyDay = patient?.id === 'demo_patient_id' ? '4' : '1';
 
-  // Stepper Stages list
   const stages = [
     { num: 1, label: 'Symptoms Logged', desc: 'Initial symptoms recorded' },
     { num: 2, label: 'Documents Uploaded', desc: 'Medical records uploaded' },
@@ -187,10 +179,8 @@ export default function DashBoardingPage() {
     { num: 6, label: 'Follow-up Due', desc: 'Verify health parameters' }
   ];
 
-  // Dynamically determine current active stage in the Health Journey
   const currentActiveStage = doctorReview ? 5 : (latestAnalysis ? 3 : 2);
 
-  // Care Plan Tasks Lists
   const carePlanTasks = [
     { id: 't1', text: 'Upload chest X-ray scans', done: true },
     { id: 't2', text: 'Prepare Doctor Brief details', done: true },
@@ -225,7 +215,6 @@ export default function DashBoardingPage() {
 
       {/* 2. NEXT ACTION (Highest Prominence Hero Row) */}
       <div className="bg-brand-lavender p-6 md:p-8 rounded-3xl shadow-md relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group hover:shadow-lg transition-all duration-300">
-        {/* Glow visual effects */}
         <div className="absolute top-0 right-0 w-36 h-36 bg-white/5 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full blur-xl -ml-6 -mb-6 pointer-events-none" />
 
@@ -259,7 +248,6 @@ export default function DashBoardingPage() {
 
       {/* PRIMARY CAREPATH VISUALIZATION (THREAD PATHWAY) */}
       <div className="bg-brand-card border border-brand-slate/10 p-6 md:p-8 rounded-3xl shadow-sm relative overflow-hidden">
-        {/* Glow accent */}
         <div className="absolute top-0 left-0 w-2 h-full bg-brand-lavender" />
 
         <h2 className="font-display text-xs font-bold tracking-wider text-brand-slate uppercase mb-8 flex items-center gap-2">
@@ -267,7 +255,6 @@ export default function DashBoardingPage() {
           Interactive CarePath Journey
         </h2>
 
-        {/* Horizontal journey steppers */}
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 pb-6 border-b border-brand-slate/5">
           {stages.map((stage) => {
             const isActive = currentActiveStage === stage.num;
@@ -302,7 +289,6 @@ export default function DashBoardingPage() {
           })}
         </div>
 
-        {/* Stage details */}
         <div className="mt-6 flex flex-col sm:flex-row gap-5 items-start justify-between bg-brand-bg/40 p-4 rounded-2xl border border-brand-slate/5 animate-in slide-in-from-top-1 duration-200">
           <div className="flex-1 min-w-0">
             <span className="text-[9px] font-bold text-brand-slate uppercase tracking-wider block">INSPECTED STAGE DETAILS</span>
@@ -345,8 +331,6 @@ export default function DashBoardingPage() {
 
       {/* ROW 1: CARE PLAN GOALS & MEDICATION REMINDERS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-        
-        {/* Left: Continuous Care Plan Goals (spans 2 columns) */}
         <div className="lg:col-span-2 bg-brand-card border border-brand-slate/10 p-6 md:p-8 rounded-3xl shadow-sm flex flex-col justify-between gap-5">
           <div className="flex justify-between items-center border-b border-brand-slate/5 pb-3.5 flex-wrap gap-2">
             <h3 className="font-display text-xs font-bold tracking-wider text-brand-slate uppercase flex items-center gap-2">
@@ -358,7 +342,6 @@ export default function DashBoardingPage() {
             </span>
           </div>
 
-          {/* Percentage Bar */}
           <div className="w-full bg-brand-bg rounded-full h-2 overflow-hidden border border-brand-slate/5">
             <div 
               className="bg-brand-sage-text h-full rounded-full transition-all duration-500" 
@@ -366,7 +349,6 @@ export default function DashBoardingPage() {
             />
           </div>
 
-          {/* Checklists */}
           <div className="flex flex-col gap-3 mt-1.5 flex-1 justify-center">
             {carePlanTasks.map((task) => (
               <div 
@@ -391,7 +373,6 @@ export default function DashBoardingPage() {
           </div>
         </div>
 
-        {/* Right: Medication Reminders (spans 1 column, h-full/flex-1 to align bottom edge) */}
         <div className="bg-brand-card border border-brand-slate/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between gap-4 h-full">
           <div className="flex justify-between items-center border-b border-brand-slate/5 pb-3">
             <h3 className="font-display text-xs font-bold tracking-wider text-brand-slate uppercase flex items-center gap-2">
@@ -407,7 +388,6 @@ export default function DashBoardingPage() {
             </Link>
           </div>
 
-          {/* Empty States check */}
           {medications.length === 0 ? (
             <div className="py-8 text-center flex flex-col items-center justify-center gap-3 flex-1">
               <Inbox className="w-8 h-8 text-brand-slate/20" />
@@ -436,7 +416,6 @@ export default function DashBoardingPage() {
                       </span>
                     </div>
 
-                    {/* Log take check-off buttons */}
                     <div className="flex items-center justify-between gap-3 mt-1.5 border-t border-brand-slate/5 pt-2.5">
                       <span className="text-[9px] text-brand-slate/75 font-light">Next Dose: {med.nextDose}</span>
                       {med.status === 'taken' ? (
@@ -470,8 +449,6 @@ export default function DashBoardingPage() {
 
       {/* ROW 2: SYMPTOM CHECK-IN, LATEST MILESTONE, RECENT ACTIONS LOG */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-        
-        {/* Box 1: Symptom Follow-up Check-in */}
         <div className="bg-brand-card border border-brand-slate/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between gap-4 h-full">
           <div className="flex flex-col gap-4">
             <h3 className="font-display text-xs font-bold tracking-wider text-brand-slate uppercase border-b border-brand-slate/5 pb-3 flex items-center gap-2">
@@ -479,7 +456,6 @@ export default function DashBoardingPage() {
               Symptom Follow-up Check-in
             </h3>
 
-            {/* Follow-up indicators */}
             <div className="grid grid-cols-2 gap-3 mb-2 text-xxs leading-relaxed font-light">
               <div className="bg-brand-bg/50 border border-brand-slate/5 p-3 rounded-2xl">
                 <span className="text-[9px] font-bold text-brand-slate uppercase tracking-wider block">Symptom Trend</span>
@@ -496,7 +472,6 @@ export default function DashBoardingPage() {
               </div>
             </div>
 
-            {/* Daily feeling question */}
             <div className="border border-brand-slate/10 rounded-2xl p-4 bg-brand-bg/30 text-center flex flex-col gap-3">
               <span className="text-xxs font-bold text-brand-plum leading-snug block">How are you feeling today?</span>
               
@@ -526,7 +501,6 @@ export default function DashBoardingPage() {
           </div>
         </div>
 
-        {/* Box 2: Latest Milestone */}
         <div className="bg-brand-card border border-brand-slate/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between gap-4 h-full">
           <div className="flex flex-col gap-4">
             <div className="flex justify-between items-center border-b border-brand-slate/5 pb-3">
@@ -543,7 +517,6 @@ export default function DashBoardingPage() {
               </Link>
             </div>
 
-            {/* Empty check */}
             {timeline.length === 0 ? (
               <div className="py-8 text-center flex flex-col items-center justify-center gap-3">
                 <Inbox className="w-8 h-8 text-brand-slate/20" />
@@ -565,7 +538,6 @@ export default function DashBoardingPage() {
           </div>
         </div>
 
-        {/* Box 3: Recent Actions Log */}
         <div className="bg-brand-card border border-brand-slate/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between gap-4 h-full">
           <div className="flex flex-col gap-4">
             <h3 className="font-display text-xs font-bold tracking-wider text-brand-slate uppercase border-b border-brand-slate/5 pb-3 flex items-center gap-2">
@@ -574,7 +546,6 @@ export default function DashBoardingPage() {
             </h3>
 
             <div className="flex flex-col gap-3 mt-1.5 text-xxs font-light leading-snug">
-              {/* Document upload status */}
               <div className="flex items-start gap-2.5">
                 <FileText className="w-4 h-4 text-brand-slate/55 shrink-0 mt-0.5" />
                 <div>
@@ -583,7 +554,6 @@ export default function DashBoardingPage() {
                 </div>
               </div>
 
-              {/* AI analysis */}
               <div className="flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-brand-lavender shrink-0 mt-0.5 animate-pulse" />
                 <div>
@@ -592,7 +562,6 @@ export default function DashBoardingPage() {
                 </div>
               </div>
 
-              {/* Doctor feedback review */}
               {doctorReview && (
                 <div className="flex items-start gap-2.5 animate-in slide-in-from-top-1 duration-200">
                   <ShieldCheck className="w-4 h-4 text-brand-sage-text shrink-0 mt-0.5" />

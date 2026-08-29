@@ -3,16 +3,19 @@ from sqlalchemy.orm import Session
 from database.connections import get_db
 from database.models import MedicalFile
 from database.crud.utils import safe_uuid
-from typing import List, Any
+from typing import List, Any, Optional
 
 router = APIRouter(prefix="/records", tags=["Records"])
 
 @router.get("")
 @router.get("/")
-def get_medical_records(patient_id: str = "44a86235-17b5-4ca1-869b-8e895bf1fbf5", db: Session = Depends(get_db)):
-    uid = safe_uuid(patient_id)
-    if uid:
-        files = db.query(MedicalFile).filter(MedicalFile.user_id == uid).order_by(MedicalFile.upload_date.desc()).all()
+def get_medical_records(patient_id: Optional[str] = None, db: Session = Depends(get_db)):
+    if patient_id:
+        uid = safe_uuid(patient_id)
+        if uid:
+            files = db.query(MedicalFile).filter(MedicalFile.user_id == uid).order_by(MedicalFile.upload_date.desc()).all()
+        else:
+            files = db.query(MedicalFile).order_by(MedicalFile.upload_date.desc()).all()
     else:
         files = db.query(MedicalFile).order_by(MedicalFile.upload_date.desc()).all()
 

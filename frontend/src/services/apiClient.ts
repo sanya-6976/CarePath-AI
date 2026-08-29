@@ -88,7 +88,6 @@ class ApiClient {
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (response.status === 401) {
-      // Auth expired or invalid, clear local storage
       localStorage.removeItem('carepath_token');
       localStorage.removeItem('carepath_patient_id');
       window.dispatchEvent(new Event('auth_expired'));
@@ -97,10 +96,12 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Request failed with status ${response.status}`);
+      if (response.status >= 500) {
+        throw new Error('CarePath is temporarily unavailable. Please try again in a moment.');
+      }
+      throw new Error(errorData.detail || errorData.message || `Request failed with status ${response.status}`);
     }
 
-    // Handle empty responses
     const text = await response.text();
     return text ? (JSON.parse(text) as T) : ({} as T);
   }

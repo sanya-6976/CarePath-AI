@@ -1,30 +1,33 @@
 import { useEffect, useState } from 'react';
 import { usePatient } from '../context/PatientContext';
-import { useAuth } from '../context/AuthContext';
 import { analysisService } from '../services/analysisService';
 import { Link } from 'react-router-dom';
-import EvidenceCard from '../components/EvidenceCard';
 import { 
   AlertTriangle, 
-  Users2, 
   ArrowLeft, 
   FileText,
-  Bookmark,
   Printer,
   ShieldAlert,
-  Compass,
-  CornerDownRight,
-  ClipboardList
+  ArrowRight,
+  CheckCircle2,
+  Stethoscope,
+  Clock,
+  AlertCircle,
+  CalendarClock,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  Activity
 } from 'lucide-react';
 import type { AnalysisResult } from '../types';
 
 export default function RecommendationPage() {
   const { patient } = usePatient();
-  const { user } = useAuth();
   const [latestAnalysis, setLatestAnalysis] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showBrief, setShowBrief] = useState(false);
+  
+  const [isEvidenceExpanded, setIsEvidenceExpanded] = useState(false);
 
   useEffect(() => {
     const loadAnalysis = async () => {
@@ -32,7 +35,6 @@ export default function RecommendationPage() {
       setError(null);
 
       try {
-        // 1. Read uploaded document records from localStorage
         const storedDocsRaw = localStorage.getItem('carepath_uploaded_docs');
         const storedDocs = storedDocsRaw ? JSON.parse(storedDocsRaw) : [];
         const completedDocs = storedDocs.filter(
@@ -66,18 +68,18 @@ export default function RecommendationPage() {
           const condStr = conditions.join(" ").toLowerCase();
           const medStr = medicines.join(" ").toLowerCase();
           if (condStr.includes("bronchitis") || condStr.includes("cough") || condStr.includes("asthma") || medStr.includes("albuterol") || medStr.includes("inhaler")) {
-            specialist = "Pulmonologist / Respirologist";
+            specialist = "Pulmonology";
           } else if (condStr.includes("hypertension") || condStr.includes("cardio") || condStr.includes("heart") || medStr.includes("lisinopril")) {
-            specialist = "Cardiologist / Internal Medicine";
+            specialist = "Cardiology";
           } else if (condStr.includes("diabetes") || condStr.includes("glucose") || medStr.includes("metformin")) {
-            specialist = "Endocrinologist / Diabetologist";
+            specialist = "Endocrinology";
           }
 
           const factors: string[] = [];
-          if (conditions.length > 0) factors.push(`Diagnoses Identified: ${conditions.join(', ')}`);
-          if (medicines.length > 0) factors.push(`Active Prescriptions Parsed: ${medicines.join(', ')}`);
-          if (tests.length > 0) factors.push(`Lab Findings & Metrics: ${tests.join('; ')}`);
-          if (symptoms.length > 0) factors.push(`Reported Clinical Symptoms: ${symptoms.join(', ')}`);
+          if (conditions.length > 0) factors.push(`Diagnoses: ${conditions.join(', ')}`);
+          if (medicines.length > 0) factors.push(`Medications: ${medicines.join(', ')}`);
+          if (tests.length > 0) factors.push(`Labs/Vitals: ${tests.join('; ')}`);
+          if (symptoms.length > 0) factors.push(`Symptoms: ${symptoms.join(', ')}`);
           if (factors.length === 0 && overviews.length > 0) factors.push(overviews[0]);
 
           const explanationText = insights.join(" ") || overviews.join(" ") || (backendItem ? backendItem.summary : "Clinical multi-agent reasoning complete over uploaded records.");
@@ -88,11 +90,12 @@ export default function RecommendationPage() {
             status: 'completed',
             specialist_recommendation: specialist,
             explanation: explanationText,
-            considered_factors: factors.length > 0 ? factors : ["Uploaded clinical diagnostic document parsed"],
+            considered_factors: factors.length > 0 ? factors : ["Clinical diagnostic document parsed"],
             safety_alerts: [
               "If chest pain, severe shortness of breath, high fever, or adverse drug symptoms develop, seek emergency care immediately."
             ],
             created_at: new Date().toISOString(),
+            risk_level: 'routine'
           });
         } else if (backendItem) {
           setLatestAnalysis({
@@ -104,6 +107,8 @@ export default function RecommendationPage() {
             considered_factors: [backendItem.summary || "Clinical diagnostic data parsed."],
             safety_alerts: ["If severe symptoms develop, seek emergency medical care immediately."],
             created_at: backendItem.created_at || new Date().toISOString(),
+            changed_factors: backendItem.changed_factors ? JSON.parse(backendItem.changed_factors) : undefined,
+            risk_level: backendItem.risk_level || 'routine'
           });
         } else {
           setLatestAnalysis(null);
@@ -136,10 +141,7 @@ export default function RecommendationPage() {
           <h3 className="font-display font-semibold text-lg font-bold">Analysis Error</h3>
         </div>
         <p className="text-sm">{error}</p>
-        <Link 
-          to="/upload" 
-          className="bg-brand-rose-text text-white text-xs font-semibold px-4 py-2.5 rounded-xl w-fit"
-        >
+        <Link to="/upload" className="bg-brand-rose-text text-white text-xs font-semibold px-4 py-2.5 rounded-xl w-fit">
           Return to Upload Center
         </Link>
       </div>
@@ -158,34 +160,46 @@ export default function RecommendationPage() {
             You need to upload medical documents and trigger the clinical reasoning mapping before viewing results.
           </p>
         </div>
-        <Link 
-          to="/upload" 
-          className="bg-brand-lavender hover:bg-brand-lavender-hover text-white text-xs font-semibold px-6 py-3 rounded-xl transition-all shadow-sm cursor-pointer"
-        >
+        <Link to="/upload" className="bg-brand-lavender hover:bg-brand-lavender-hover text-white text-xs font-semibold px-6 py-3 rounded-xl transition-all shadow-sm cursor-pointer">
           Go to Upload Center
         </Link>
       </div>
     );
   }
 
+  const severityProps = {
+    critical: { color: 'bg-brand-rose-text text-white', text: 'EMERGENCY', explanation: 'Seek emergency medical care immediately.' },
+    urgent: { color: 'bg-[#EA580C] text-white', text: 'URGENT', explanation: 'Prompt clinical evaluation recommended.' },
+    routine: { color: 'bg-brand-slate text-white', text: 'ROUTINE', explanation: 'No immediate emergency indicators detected.' },
+    low: { color: 'bg-brand-sage-text text-white', text: 'LOW RISK', explanation: 'Standard self-care or regular check-up sufficient.' },
+  };
+  const currentSeverity = severityProps[(latestAnalysis.risk_level?.toLowerCase() as keyof typeof severityProps) || 'routine'];
+
+  const getAgentTrace = () => {
+    try {
+      const stored = localStorage.getItem('final_agent_states');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {}
+    return null;
+  };
+  const agentTrace = getAgentTrace();
+
   return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-6 print:p-0 print:bg-white print:text-black">
-      {/* Back button and title badge (Hidden in Print Mode) */}
-      <div className="flex items-center justify-between gap-3 print:hidden">
+    <div className="max-w-6xl mx-auto flex flex-col gap-6 print:p-0 print:bg-white print:text-black animate-in fade-in duration-300">
+      <div className="flex items-center justify-between gap-3 print:hidden mb-2">
         <div className="flex items-center gap-3">
           <Link 
             to="/dashboard" 
             className="p-2 rounded-lg bg-brand-card border border-brand-slate/10 text-brand-slate hover:text-brand-plum transition-all cursor-pointer"
-            title="Back to Dashboard"
-            aria-label="Back to Dashboard"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <span className="text-[10px] font-bold text-brand-lavender uppercase tracking-wider bg-brand-lavender-light px-2.5 py-1 rounded-full">
-            Analysis Report
+          <span className="text-[10px] font-bold text-brand-lavender uppercase tracking-wider bg-brand-lavender-light px-2.5 py-1 rounded-full border border-brand-lavender/20">
+            CarePath Clinical Result
           </span>
         </div>
-        
         <button
           onClick={() => window.print()}
           className="inline-flex items-center gap-2 border border-brand-slate/15 hover:bg-brand-bg text-brand-plum text-xs font-semibold px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-xxs"
@@ -195,185 +209,255 @@ export default function RecommendationPage() {
         </button>
       </div>
 
-      {/* Specialist Recommendation Block with Evidence/RAG Explainability */}
-      <EvidenceCard
-        recommendation={latestAnalysis.specialist_recommendation}
-        confidence={95}
-        reasons={latestAnalysis.considered_factors && latestAnalysis.considered_factors.length > 0 
-          ? latestAnalysis.considered_factors 
-          : ['Clinical diagnostic data parsed from uploaded records.']
-        }
-        patientInfo={[
-          `Reported Symptoms: ${patient?.current_symptoms || 'Parsed from Uploaded Document'}`,
-          `Demographics: Age ${patient?.age || 'N/A'} | Gender ${patient?.gender || 'N/A'}`,
-          `Allergies: ${patient?.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : 'No known drug allergies'}`
-        ]}
-        sources={[
-          {
-            title: 'CarePath Clinical Knowledge Base & Evidence Reference',
-            relevance: 'Cross-referenced against verified clinical guidelines and longitudinal multi-agent patient records.'
-          },
-          {
-            title: 'Multi-Agent Clinical Synthesis Protocol',
-            relevance: 'Synthesized from intake, vision OCR, laboratory findings, and diagnostic records.'
-          }
-        ]}
-      />
-
-      {/* Rationale and considered factors */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-1">
-        <div className="bg-brand-card border border-brand-slate/10 p-6 rounded-2xl shadow-sm">
-          <h3 className="font-display text-sm font-bold text-brand-plum mb-4 flex items-center gap-2">
-            <Bookmark className="w-4 h-4 text-brand-lavender" />
-            Considered Clinical Factors
-          </h3>
-          <ul className="flex flex-col gap-3">
-            {latestAnalysis.considered_factors?.map((factor, idx) => (
-              <li key={idx} className="flex gap-3 items-start text-xs text-brand-plum font-light leading-relaxed">
-                <span className="w-5 h-5 rounded-full bg-brand-bg text-brand-slate font-bold flex items-center justify-center shrink-0 text-[10px]">
-                  {idx + 1}
-                </span>
-                <span className="pt-0.5">{factor}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Safety Assessment */}
-        <div className="bg-brand-card border border-brand-slate/10 p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* LEFT COLUMN: Results & Evidence */}
+        <div className="lg:col-span-7 flex flex-col gap-8">
+          
+          {/* 1. RESULT AT A GLANCE */}
           <div>
-            <h3 className="font-display text-sm font-bold text-brand-plum mb-4 flex items-center gap-2">
-              <ShieldAlert className="w-4.5 h-4.5 text-brand-rose-text" />
-              Safety Assessment
-            </h3>
+            <h2 className="font-display text-2xl font-extrabold text-brand-plum mb-6">CAREPATH RESULT</h2>
             
-            {latestAnalysis.safety_alerts && latestAnalysis.safety_alerts.length > 0 ? (
-              <div className="bg-brand-rose-bg border border-brand-rose-text/10 text-brand-rose-text p-4 rounded-xl text-xs leading-relaxed font-light mb-2">
-                {latestAnalysis.safety_alerts[0]}
+            <div className="flex flex-col gap-5 bg-white border border-brand-slate/10 p-6 rounded-2xl shadow-sm">
+              <div className="flex flex-col sm:flex-row gap-6 sm:items-center justify-between pb-5 border-b border-brand-slate/10">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-bold text-brand-slate uppercase tracking-wider">Severity</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-black tracking-wider px-2 py-0.5 rounded-md ${currentSeverity.color}`}>
+                      {currentSeverity.text}
+                    </span>
+                    <span className="text-xs text-brand-slate font-medium">
+                      — {currentSeverity.explanation}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 group relative items-start sm:items-end">
+                  <span className="text-[10px] font-bold text-brand-slate uppercase tracking-wider flex items-center gap-1 cursor-help">
+                    Confidence <Info className="w-3 h-3 text-brand-slate/60" />
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black tracking-wide text-brand-plum">
+                      MODERATE
+                    </span>
+                  </div>
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-brand-plum text-white text-[10px] p-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-left">
+                    Confidence reflects the amount and consistency of available information. It is not a measure of diagnostic certainty.
+                  </div>
+                </div>
               </div>
-            ) : (
-              <p className="text-xs text-brand-slate leading-relaxed font-light mb-2">
-                No immediate emergency red-flag triggers identified in parsed medical history or diagnostics.
-              </p>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-bold text-brand-slate uppercase tracking-wider">Possible Explanation</span>
+                <p className="text-sm text-brand-plum font-semibold leading-relaxed">
+                  {latestAnalysis.explanation}
+                </p>
+                <p className="text-xs text-brand-slate mt-2 font-medium">
+                  CarePath recommends discussing these findings with a clinician.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. KEY FINDINGS */}
+          <div>
+            <h3 className="text-sm font-bold text-brand-slate uppercase tracking-wider mb-4">KEY FINDINGS</h3>
+            <div className="flex flex-col gap-2">
+              {latestAnalysis.considered_factors?.map((factor, idx) => (
+                <div key={idx} className="bg-brand-bg/50 border border-brand-slate/10 p-3.5 rounded-xl flex gap-3 items-start hover:border-brand-lavender/30 transition-colors">
+                  <CheckCircle2 className="w-4 h-4 text-brand-lavender shrink-0 mt-0.5" />
+                  <span className="text-sm text-brand-plum font-semibold leading-snug">{factor}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 3. WHY THIS MATTERS */}
+          <div>
+            <h3 className="text-sm font-bold text-brand-slate uppercase tracking-wider mb-4">WHY THIS MATTERS</h3>
+            <div className="bg-brand-lavender-light/30 border border-brand-lavender/20 p-6 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+              <span className="text-xs font-bold text-brand-slate uppercase tracking-wide">Symptoms + Imaging + History</span>
+              <ArrowDownIcon className="w-5 h-5 text-brand-lavender my-1" />
+              <span className="text-sm font-bold text-brand-plum">May warrant {latestAnalysis.specialist_recommendation} evaluation.</span>
+            </div>
+          </div>
+
+          {/* 9. LONGITUDINAL CONTEXT */}
+          {latestAnalysis.changed_factors && latestAnalysis.changed_factors.length > 0 && (
+            <div>
+              <h3 className="text-sm font-bold text-brand-slate uppercase tracking-wider mb-4">PATIENT HISTORY USED</h3>
+              <div className="bg-white border border-brand-slate/10 p-5 rounded-2xl shadow-sm">
+                <div className="flex flex-col gap-3">
+                  {latestAnalysis.changed_factors.map((factor: string, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2 text-sm text-brand-plum font-medium">
+                      <Clock size={16} className="text-brand-slate shrink-0" />
+                      <span>{factor}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 8. EVIDENCE TRACEABILITY */}
+          <div>
+            <button 
+              onClick={() => setIsEvidenceExpanded(!isEvidenceExpanded)}
+              className="flex items-center justify-between w-full text-left bg-brand-bg p-4 rounded-xl border border-brand-slate/10 hover:border-brand-slate/20 transition-all cursor-pointer"
+            >
+              <span className="text-sm font-bold text-brand-plum flex items-center gap-2">
+                <FileText className="w-4 h-4 text-brand-slate" />
+                WHY CAREPATH RECOMMENDED THIS
+              </span>
+              {isEvidenceExpanded ? <ChevronUp className="w-4 h-4 text-brand-slate" /> : <ChevronDown className="w-4 h-4 text-brand-slate" />}
+            </button>
+            
+            {isEvidenceExpanded && (
+              <div className="mt-2 bg-white border border-brand-slate/10 p-5 rounded-xl shadow-sm flex flex-col gap-3 animate-in slide-in-from-top-2 duration-200">
+                <p className="text-xs text-brand-slate font-semibold mb-2">Sources used to generate this recommendation:</p>
+                <div className="flex items-center gap-2 text-xs font-bold text-brand-plum"><CheckCircle2 className="w-3.5 h-3.5 text-brand-sage-text" /> Current symptoms</div>
+                <div className="flex items-center gap-2 text-xs font-bold text-brand-plum"><CheckCircle2 className="w-3.5 h-3.5 text-brand-sage-text" /> Medical document extractions</div>
+                <div className="flex items-center gap-2 text-xs font-bold text-brand-plum"><CheckCircle2 className="w-3.5 h-3.5 text-brand-sage-text" /> Patient timeline</div>
+                <div className="flex items-center gap-2 text-xs font-bold text-brand-plum"><CheckCircle2 className="w-3.5 h-3.5 text-brand-sage-text" /> Clinical reasoning hypotheses</div>
+              </div>
             )}
           </div>
-
-          <div className="text-xs text-brand-slate/75 leading-relaxed bg-brand-bg p-3.5 rounded-xl border border-brand-slate/10">
-            <span className="font-bold text-xs text-brand-plum uppercase block mb-1">Healthcare Advisory:</span>
-            CarePath suggestions are autonomous advisory recommendations. We provide healthcare navigation support, which does not replace qualified diagnostic procedures, medical triage, or doctors prescriptions.
-          </div>
-        </div>
-      </div>
-
-      {/* Prepare for appointment Specialist Brief */}
-      <div className="bg-brand-card border border-brand-slate/10 p-6 rounded-2xl shadow-sm flex flex-col gap-5 print:border-none print:shadow-none print:p-0">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-brand-slate/10 pb-4 print:hidden">
-          <div className="flex gap-3 items-center">
-            <div className="w-10 h-10 bg-brand-lavender-light text-brand-lavender rounded-xl flex items-center justify-center shrink-0">
-              <ClipboardList className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-display font-bold text-sm text-brand-plum">Specialist Consultation Brief</h4>
-              <p className="text-brand-slate text-xs font-light">Prepare structured notes to communicate with your doctor.</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowBrief(!showBrief)}
-            className="bg-brand-lavender hover:bg-brand-lavender-hover text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer shrink-0"
-          >
-            {showBrief ? 'Collapse Brief' : 'Review Consult Brief'}
-          </button>
         </div>
 
-        {/* The Brief Document Content */}
-        {(showBrief || window.matchMedia('print').matches) && (
-          <div className="bg-brand-bg/50 border border-brand-slate/10 rounded-2xl p-5 md:p-7 flex flex-col gap-6 animate-in slide-in-from-top-3 duration-250 print:bg-white print:border-none print:p-0">
-            <div className="flex justify-between items-start border-b border-brand-slate/10 pb-4">
+        {/* RIGHT COLUMN: Recommendation & Next Steps */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          
+          {/* 7. SPECIALIST RECOMMENDATION */}
+          <div className="bg-white border border-brand-slate/10 p-6 rounded-3xl shadow-sm flex flex-col gap-5 relative overflow-hidden ring-1 ring-brand-slate/5">
+            <h3 className="text-[10px] font-bold text-brand-slate uppercase tracking-wider">RECOMMENDED SPECIALIST</h3>
+            
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-brand-bg rounded-xl border border-brand-slate/10">
+                <Stethoscope className="w-6 h-6 text-brand-plum" />
+              </div>
               <div>
-                <h3 className="font-display font-bold text-md text-brand-plum">Patient Intake Summary</h3>
-                <p className="text-[10px] text-brand-slate font-light">Prepared automatically by CarePath AI clinical supervisor</p>
-              </div>
-              <div className="text-right text-[10px] text-brand-slate font-light">
-                <span>Patient: {patient?.name || user?.name || 'Patient'}</span>
-                <span className="block">Age: {patient?.age || 'N/A'} | Gender: {patient?.gender || 'N/A'}</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-1">
-              {/* Left Column: Symptoms & History */}
-              <div className="flex flex-col gap-4">
-                <div>
-                  <h4 className="text-xs font-bold text-brand-slate uppercase tracking-wider mb-2">Primary Symptom Context</h4>
-                  <p className="text-xs text-brand-plum italic leading-relaxed font-light p-3 bg-brand-card border border-brand-slate/10 rounded-xl">
-                    "{patient?.current_symptoms || 'Symptoms logged and under active correlation.'}"
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-brand-slate uppercase tracking-wider mb-2">Clinical Observations</h4>
-                  <ul className="flex flex-col gap-2.5 text-xs text-brand-plum font-light">
-                    <li className="flex gap-2 items-start">
-                      <CornerDownRight className="w-3.5 h-3.5 text-brand-lavender shrink-0 mt-0.5" />
-                      <span>Diagnostics indicate onset patterns correlated with local guidelines.</span>
-                    </li>
-                    <li className="flex gap-2 items-start">
-                      <CornerDownRight className="w-3.5 h-3.5 text-brand-lavender shrink-0 mt-0.5" />
-                      <span>Previous drug responses logged as flat or insufficient.</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Right Column: Doctor questions */}
-              <div className="flex flex-col gap-4">
-                <h4 className="text-xs font-bold text-brand-slate uppercase tracking-wider mb-2">Questions to Ask Your Specialist</h4>
-                <div className="bg-brand-card border border-brand-slate/10 rounded-xl p-4 flex flex-col gap-3.5">
-                  <div className="flex gap-3 items-start text-xs font-light text-brand-plum leading-relaxed">
-                    <span className="text-brand-lavender font-bold">1.</span>
-                    <span>Are my persistent symptoms correlated with the details extracted from my uploaded lab/imaging report?</span>
-                  </div>
-                  <div className="flex gap-3 items-start text-xs font-light text-brand-plum leading-relaxed">
-                    <span className="text-brand-lavender font-bold">2.</span>
-                    <span>What is the recommended timeline to repeat diagnostic testing if symptoms remain static?</span>
-                  </div>
-                  <div className="flex gap-3 items-start text-xs font-light text-brand-plum leading-relaxed">
-                    <span className="text-brand-lavender font-bold">3.</span>
-                    <span>Are there specific warning alerts or red-flags I should track at home during treatment?</span>
-                  </div>
-                </div>
+                <h4 className="font-display font-extrabold text-2xl text-brand-plum">
+                  {latestAnalysis.specialist_recommendation}
+                </h4>
+                <span className="text-[10px] font-bold text-brand-lavender bg-brand-lavender-light px-2 py-1 rounded-md mt-1.5 inline-block">
+                  Recommended soon
+                </span>
               </div>
             </div>
 
-            <div className="flex justify-between items-center mt-4 border-t border-brand-slate/10 pt-4 print:hidden">
-              <span className="text-[10px] text-brand-slate font-light">Double-sided print recommended. Bring reports to consultation.</span>
-              <button
-                onClick={() => window.print()}
-                className="flex items-center gap-1.5 text-xs font-bold text-brand-lavender hover:underline cursor-pointer"
+            <div className="flex flex-col gap-1.5 mt-2">
+              <span className="text-[10px] font-bold text-brand-slate uppercase tracking-wider">WHY?</span>
+              <p className="text-sm font-semibold text-brand-plum">
+                Persistent symptoms and relevant imaging/history support further evaluation.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1.5 mt-2">
+              <span className="text-[10px] font-bold text-brand-slate uppercase tracking-wider">NEXT STEP</span>
+              <Link 
+                to={`/doctor-bridge?specialty=${encodeURIComponent(latestAnalysis.specialist_recommendation || 'General')}`}
+                className="text-sm font-bold text-white bg-brand-lavender hover:bg-brand-lavender-hover px-5 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
               >
-                <Printer className="w-3.5 h-3.5" />
-                Print Consult Brief
-              </button>
+                VIEW SPECIALIST PATH <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Return link */}
-      <div className="flex justify-between items-center print:hidden border-t border-brand-slate/10 pt-6">
+          {/* 15. AGENT TRACE (Terminal Style) */}
+          <div className="bg-brand-bg border border-brand-slate/10 p-5 rounded-2xl shadow-sm font-mono flex flex-col gap-3">
+            <h3 className="text-[10px] font-bold text-brand-slate uppercase tracking-wider mb-2 flex items-center gap-2 font-sans border-b border-brand-slate/10 pb-3">
+              <Activity className="w-3.5 h-3.5" />
+              LIVE CAREPATH EXECUTION
+            </h3>
+            
+            <div className="flex flex-col gap-2.5 overflow-y-auto max-h-64">
+              {['Supervisor', 'Intake', 'Vision', 'Docs', 'Timeline', 'Evidence', 'Clinical Reasoning', 'Safety', 'Referral', 'Care Plan', 'Follow-up'].map((agentName, index) => {
+                let status = 'Waiting';
+                let reason = '';
+                if (agentTrace) {
+                  const nodeState = agentTrace[agentName];
+                  if (nodeState) {
+                    status = nodeState.status;
+                    reason = nodeState.reason_for_execution || '';
+                  }
+                }
+                
+                const isSkipped = status === 'skipped' || status === 'Skipped';
+                const isCompleted = status === 'completed' || status === 'Completed';
+                const isRunning = status === 'running' || status === 'Running';
+                const isFailed = status === 'failed' || status === 'Failed';
+
+                const d = new Date(new Date(latestAnalysis.created_at).getTime() + index * 1200);
+                const timeString = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+
+                if (status === 'Waiting') return null;
+
+                return (
+                  <div key={agentName} className="flex flex-col gap-0.5 text-xs">
+                    <div className="flex items-start gap-3">
+                      <span className="text-brand-slate opacity-70 shrink-0">{timeString}</span>
+                      {isCompleted && <span className="text-brand-sage-text shrink-0">✓</span>}
+                      {isSkipped && <span className="text-brand-slate shrink-0">—</span>}
+                      {isRunning && <span className="text-brand-lavender shrink-0 animate-pulse">●</span>}
+                      {isFailed && <span className="text-brand-rose-text shrink-0">!</span>}
+                      
+                      <div className="flex flex-col">
+                        <span className={`font-semibold ${isCompleted ? 'text-brand-plum' : isSkipped ? 'text-brand-slate line-through opacity-70' : isFailed ? 'text-brand-rose-text' : 'text-brand-lavender'}`}>
+                          {agentName} {isSkipped ? 'skipped' : ''}
+                        </span>
+                        {isSkipped && reason && (
+                          <span className="text-brand-slate opacity-70 text-[10px] mt-0.5">Reason: {reason}</span>
+                        )}
+                        {isFailed && (
+                          <span className="text-brand-rose-text opacity-70 text-[10px] mt-0.5">Execution failed.</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 12. SAFETY NOTE */}
+          <div className="bg-brand-card border border-brand-slate/10 p-5 rounded-2xl mt-auto shadow-sm">
+            <h3 className="text-[10px] font-bold text-brand-slate uppercase tracking-wider mb-2 flex items-center gap-2">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              SAFETY NOTE
+            </h3>
+            <p className="text-xs text-brand-slate leading-relaxed font-semibold">
+              CarePath provides clinical navigation and decision support. It does not replace professional medical evaluation or provide a confirmed diagnosis.
+            </p>
+          </div>
+
+        </div>
+      </div>
+      
+      {/* Footer Return Link */}
+      <div className="flex justify-between items-center print:hidden border-t border-brand-slate/10 pt-6 mt-6">
         <Link 
           to="/dashboard"
-          className="text-xs font-semibold text-brand-slate hover:text-brand-plum inline-flex items-center gap-1 transition-colors"
+          className="text-xs font-bold text-brand-slate hover:text-brand-plum inline-flex items-center gap-1 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Dashboard Overview
         </Link>
         <Link 
           to="/journey"
-          className="text-xs font-semibold text-brand-lavender hover:underline inline-flex items-center gap-1 transition-colors"
+          className="text-xs font-bold text-brand-lavender hover:underline inline-flex items-center gap-1 transition-colors"
         >
-          <Compass className="w-3.5 h-3.5" />
+          <CalendarClock className="w-3.5 h-3.5" />
           View Care Journey Map
         </Link>
       </div>
     </div>
+  );
+}
+
+function ArrowDownIcon(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 5v14"/>
+      <path d="m19 12-7 7-7-7"/>
+    </svg>
   );
 }

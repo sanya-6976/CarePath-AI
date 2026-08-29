@@ -137,7 +137,6 @@ export default function UploadCenterPage() {
   const { patient } = usePatient();
   const navigate = useNavigate();
 
-  // Load from local storage or fallback to seed
   const [documents, setDocuments] = useState<UploadedDoc[]>(() => {
     const stored = localStorage.getItem('carepath_uploaded_docs');
     return stored ? JSON.parse(stored) : INITIAL_DOCS;
@@ -149,7 +148,6 @@ export default function UploadCenterPage() {
   const [isStartingAnalysis, setIsStartingAnalysis] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  // Sync to local storage
   useEffect(() => {
     localStorage.setItem('carepath_uploaded_docs', JSON.stringify(documents));
   }, [documents]);
@@ -165,7 +163,6 @@ export default function UploadCenterPage() {
   };
 
   const simulateProcessingPipeline = (docId: string, fileName: string) => {
-    // 1. Processing (Text extraction)
     setTimeout(() => {
       setDocuments(prev => prev.map(doc => {
         if (doc.id === docId) {
@@ -179,7 +176,6 @@ export default function UploadCenterPage() {
 
       if (fileName.endsWith('.exe')) return;
 
-      // 2. Analyzing (AI multi-agent reasoning)
       setTimeout(() => {
         setDocuments(prev => prev.map(doc => {
           if (doc.id === docId) {
@@ -193,11 +189,9 @@ export default function UploadCenterPage() {
 
         if (fileName.includes('fail') || fileName.includes('corrupt')) return;
 
-        // 3. Complete / Results Extraction
         setTimeout(() => {
           setDocuments(prev => prev.map(doc => {
             if (doc.id === docId) {
-              // Handle "No findings" file trigger
               if (fileName.includes('clean')) {
                 return {
                   ...doc,
@@ -216,7 +210,6 @@ export default function UploadCenterPage() {
                 };
               }
 
-              // Handle "Partial extraction" file trigger
               if (fileName.includes('partial')) {
                 return {
                   ...doc,
@@ -242,7 +235,6 @@ export default function UploadCenterPage() {
                 };
               }
 
-              // Normal successful full extraction
               return {
                 ...doc,
                 status: 'complete',
@@ -273,14 +265,14 @@ export default function UploadCenterPage() {
     }, 800);
   };
 
-const formatFileSize = (bytes: number): string => {
-  if (!bytes || bytes <= 0) return '0 KB';
-  if (bytes < 1024 * 1024) {
-    const kb = Math.round(bytes / 1024);
-    return `${Math.max(1, kb)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
+  const formatFileSize = (bytes: number): string => {
+    if (!bytes || bytes <= 0) return '0 KB';
+    if (bytes < 1024 * 1024) {
+      const kb = Math.round(bytes / 1024);
+      return `${Math.max(1, kb)} KB`;
+    }
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   const handleFileUpload = async (file: File) => {
     const formattedSize = formatFileSize(file.size);
@@ -326,7 +318,6 @@ const formatFileSize = (bytes: number): string => {
       console.warn('Real API upload error, running processing fallback:', err);
     }
 
-    // Run processing fallback if backend endpoint was unreachable
     simulateProcessingPipeline(newDocId, file.name.toLowerCase());
   };
 
@@ -366,8 +357,7 @@ const formatFileSize = (bytes: number): string => {
       if (patient.id === 'demo_patient_id') {
         navigate('/analysis/processing?demo=true');
       } else {
-        const response = await analysisService.startAnalysis(patient.id);
-        navigate(`/analysis/processing?id=${response.id}`);
+        navigate(`/analysis/processing?patient_id=${patient.id}`);
       }
     } catch (err: any) {
       console.error(err);
@@ -380,7 +370,7 @@ const formatFileSize = (bytes: number): string => {
   const selectedDoc = documents.find(d => d.id === selectedDocId);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-300">
       {analysisError && (
         <div className="bg-brand-rose-bg border border-brand-rose-text/10 text-brand-rose-text p-4 rounded-xl text-sm flex items-center gap-2.5">
           <AlertCircle className="w-5 h-5 shrink-0" />
@@ -388,17 +378,13 @@ const formatFileSize = (bytes: number): string => {
         </div>
       )}
 
-      {/* Grid: Uploader on Left, Uploaded List on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-        
-        {/* Left: Uploader (3 Cols) */}
         <div className="lg:col-span-3 bg-brand-card border border-brand-slate/10 p-6 rounded-3xl shadow-xxs flex flex-col gap-5">
           <div>
             <h3 className="font-display font-bold text-sm text-brand-plum">Submit Diagnostic Records</h3>
             <p className="text-brand-slate text-xs font-light mt-0.5">Choose document category and drag file to analyze.</p>
           </div>
 
-          {/* Category Dropdown */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold text-brand-slate uppercase tracking-wider">Document Category</label>
             <select
@@ -414,7 +400,6 @@ const formatFileSize = (bytes: number): string => {
             </select>
           </div>
 
-          {/* Drag & Drop Area */}
           <div
             onDragEnter={handleDrag}
             onDragOver={handleDrag}
@@ -442,7 +427,6 @@ const formatFileSize = (bytes: number): string => {
           </div>
         </div>
 
-        {/* Right: Uploaded List (2 Cols) */}
         <div className="lg:col-span-2 bg-brand-card border border-brand-slate/10 p-6 rounded-3xl shadow-xxs flex flex-col gap-4">
           <div>
             <h3 className="font-display font-bold text-sm text-brand-plum">Uploaded Documents</h3>
@@ -473,10 +457,14 @@ const formatFileSize = (bytes: number): string => {
                       <div className="min-w-0">
                         <span className="text-xs font-bold text-brand-plum truncate block leading-tight">{doc.name}</span>
                         <span className="text-[10px] text-brand-slate font-light block mt-0.5">
-                          {doc.category} &bull; {doc.size}
+                          {doc.category} &bull; {doc.size} {doc.result?.summary.date ? `• ${doc.result.summary.date}` : ''}
                         </span>
+                        {doc.result && doc.result.extracted.medicines.length > 0 && (
+                          <span className="text-[9px] font-medium text-brand-lavender bg-brand-lavender-light border border-brand-lavender/10 px-1.5 py-0.5 rounded-md mt-1.5 inline-block">
+                            Medication: {doc.result.extracted.medicines[0]}
+                          </span>
+                        )}
 
-                        {/* Visual Progress / Ticker Status */}
                         <div className="flex items-center gap-1.5 mt-2">
                           {doc.status === 'uploading' && (
                             <div className="w-full flex items-center gap-2">
@@ -526,7 +514,6 @@ const formatFileSize = (bytes: number): string => {
                       </div>
                     </div>
 
-                    {/* Trash / Retry CTA */}
                     <div className="shrink-0 flex gap-2">
                       {doc.status === 'failed' && (
                         <button
@@ -553,7 +540,6 @@ const formatFileSize = (bytes: number): string => {
         </div>
       </div>
 
-      {/* Selected Document Analysis Output */}
       {selectedDoc && (selectedDoc.status === 'complete' || selectedDoc.status === 'partial' || selectedDoc.status === 'no_findings') && selectedDoc.result && (
         <div className="bg-brand-card border border-brand-slate/10 p-6 md:p-8 rounded-3xl shadow-sm flex flex-col gap-6 animate-in fade-in duration-300">
           <div className="flex items-center gap-2.5 border-b border-brand-slate/10 pb-4">
@@ -567,7 +553,6 @@ const formatFileSize = (bytes: number): string => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            {/* Left: Document Summary */}
             <div className="md:col-span-2 bg-brand-bg/50 border border-brand-slate/10 p-5 rounded-2xl flex flex-col gap-4">
               <h4 className="font-display text-[10px] font-bold tracking-wider text-brand-slate uppercase border-b border-brand-slate/10 pb-2">Document Summary</h4>
               
@@ -596,12 +581,10 @@ const formatFileSize = (bytes: number): string => {
               </div>
             </div>
 
-            {/* Right: Extracted Facts Grid */}
             <div className="md:col-span-3 flex flex-col gap-4">
               <h4 className="font-display text-[10px] font-bold tracking-wider text-brand-slate uppercase border-b border-brand-slate/10 pb-2">Clinical Facts Extracted</h4>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Medicines */}
                 <div className="border border-brand-slate/10 p-4 rounded-xl">
                   <span className="text-[9px] font-bold text-brand-slate uppercase block mb-1">Medicines Mentioned</span>
                   {selectedDoc.result.extracted.medicines.length > 0 ? (
@@ -615,7 +598,6 @@ const formatFileSize = (bytes: number): string => {
                   )}
                 </div>
 
-                {/* Symptoms */}
                 <div className="border border-brand-slate/10 p-4 rounded-xl">
                   <span className="text-[9px] font-bold text-brand-slate uppercase block mb-1">Symptoms Extracted</span>
                   {selectedDoc.result.extracted.symptoms.length > 0 ? (
@@ -629,7 +611,6 @@ const formatFileSize = (bytes: number): string => {
                   )}
                 </div>
 
-                {/* Tests & Measurements */}
                 <div className="border border-brand-slate/10 p-4 rounded-xl">
                   <span className="text-[9px] font-bold text-brand-slate uppercase block mb-1">Tests & Measurements</span>
                   {selectedDoc.result.extracted.tests.length > 0 || selectedDoc.result.extracted.measurements.length > 0 ? (
@@ -646,7 +627,6 @@ const formatFileSize = (bytes: number): string => {
                   )}
                 </div>
 
-                {/* Diagnoses & Conditions */}
                 <div className="border border-brand-slate/10 p-4 rounded-xl">
                   <span className="text-[9px] font-bold text-brand-slate uppercase block mb-1">Diagnoses / Conditions Mentioned</span>
                   {selectedDoc.result.extracted.conditions.length > 0 ? (
@@ -661,7 +641,6 @@ const formatFileSize = (bytes: number): string => {
                 </div>
               </div>
 
-              {/* Instructions */}
               {selectedDoc.result.extracted.instructions.length > 0 && (
                 <div className="border border-brand-slate/10 p-4 rounded-xl">
                   <span className="text-[9px] font-bold text-brand-slate uppercase block mb-1.5">Instructions</span>
@@ -675,7 +654,6 @@ const formatFileSize = (bytes: number): string => {
             </div>
           </div>
 
-          {/* AI Insight Section (Clearly Segregated from clinical facts) */}
           <div className="bg-brand-lavender-light/35 border-l-2 border-brand-lavender p-5 rounded-r-2xl mt-2 flex gap-3">
             <Info className="w-5 h-5 text-brand-lavender shrink-0 mt-0.5" />
             <div>
@@ -688,7 +666,6 @@ const formatFileSize = (bytes: number): string => {
         </div>
       )}
 
-      {/* Ready to Analyze Bottom Banner */}
       <div className="bg-brand-card border border-brand-slate/10 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
         <div>
           <h3 className="font-display font-semibold text-sm text-brand-plum">Ready to begin multi-agent pipeline?</h3>

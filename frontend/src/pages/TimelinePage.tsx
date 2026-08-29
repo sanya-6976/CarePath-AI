@@ -4,7 +4,7 @@ import { timelineService } from '../services/timelineService';
 import { 
   Activity, 
   FileText, 
-  Sparkles, 
+  Brain, 
   Pill, 
   Stethoscope, 
   UserCheck, 
@@ -18,7 +18,8 @@ import {
   AlertCircle,
   HelpCircle,
   TrendingUp,
-  Inbox
+  Inbox,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { TimelineEvent, TimelineEventType } from '../types';
@@ -82,7 +83,6 @@ export default function TimelinePage() {
 
       const combined = [...remoteEvents, ...docEvents];
       
-      // Deduplicate by id
       const uniqueEventsMap = new Map<string, TimelineEvent>();
       combined.forEach(e => {
         if (!uniqueEventsMap.has(e.id)) {
@@ -93,7 +93,6 @@ export default function TimelinePage() {
       let allEvents = Array.from(uniqueEventsMap.values());
       
       if (allEvents.length === 0) {
-        // Rich seed events fallback for immediate presentation
         allEvents = [
           {
             id: 'ev_seed_1',
@@ -125,9 +124,13 @@ export default function TimelinePage() {
         ];
       }
 
-      const sorted = allEvents.sort((a, b) => 
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
+      const sorted = allEvents.sort((a, b) => {
+        const dateA = new Date(a.timestamp || Date.now());
+        const dateB = new Date(b.timestamp || Date.now());
+        const timeA = isNaN(dateA.getTime()) ? Date.now() : dateA.getTime();
+        const timeB = isNaN(dateB.getTime()) ? Date.now() : dateB.getTime();
+        return timeB - timeA;
+      });
 
       setEvents(sorted);
       if (sorted.length > 0) {
@@ -136,7 +139,7 @@ export default function TimelinePage() {
     } catch (err: any) {
       console.error('Error fetching timeline:', err);
       setError(err.message || 'Failed to fetch timeline.');
-    } finally {
+    } fontIsLoading: {
       setIsLoading(false);
     }
   };
@@ -188,22 +191,24 @@ export default function TimelinePage() {
     }
   };
 
-  const getEventMeta = (type: TimelineEventType) => {
+  const getEventMeta = (type: TimelineEventType | 'image') => {
     switch (type) {
       case 'symptom':
         return { icon: Activity, bg: 'bg-brand-amber-bg text-brand-amber-text border-brand-amber-text/10', label: 'Symptom', link: '/followup' };
       case 'document':
         return { icon: FileText, bg: 'bg-brand-lavender-light text-brand-lavender border-brand-lavender/10', label: 'Document', link: '/records' };
+      case 'image':
+        return { icon: ImageIcon, bg: 'bg-brand-bg text-brand-plum border-brand-slate/15', label: 'Image', link: '/records' };
       case 'test':
         return { icon: FileSpreadsheet, bg: 'bg-brand-bg text-brand-plum border-brand-slate/15', label: 'Diagnostics', link: '/records' };
       case 'medication':
         return { icon: Pill, bg: 'bg-brand-lavender-light text-brand-lavender border-brand-lavender/10', label: 'Medication', link: '/medications' };
       case 'doctor':
-        return { icon: Stethoscope, bg: 'bg-brand-sage-bg text-brand-sage-text border-brand-sage-text/10', label: 'Doctor Bridge', link: '/doctor-bridge' };
+        return { icon: Stethoscope, bg: 'bg-brand-sage-bg text-brand-sage-text border-brand-sage-text/10', label: 'Consultation', link: '/doctor-bridge' };
       case 'referral':
         return { icon: UserCheck, bg: 'bg-brand-sage-bg text-brand-sage-text border-brand-sage-text/10', label: 'Referral Route', link: '/journey' };
       case 'analysis':
-        return { icon: Sparkles, bg: 'bg-brand-lavender text-white border-brand-lavender/10', label: 'AI Insight', link: '/analysis' };
+        return { icon: Brain, bg: 'bg-brand-lavender text-white border-brand-lavender/10', label: 'AI Insight', link: '/analysis' };
       case 'followup':
         return { icon: Calendar, bg: 'bg-brand-sage-bg text-brand-sage-text border-brand-sage-text/10', label: 'Follow-up', link: '/followup' };
       case 'careplan':
@@ -258,7 +263,7 @@ export default function TimelinePage() {
   const filteredEvents = getFilteredEvents();
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-300">
       {error && (
         <div className="bg-brand-rose-bg border border-brand-rose-text/10 text-brand-rose-text p-4 rounded-xl text-sm flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -269,9 +274,7 @@ export default function TimelinePage() {
         </div>
       )}
 
-      {/* Filter and Action Header Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-brand-slate/10 pb-4">
-        {/* Filter Chips */}
         <div className="flex flex-wrap gap-2.5">
           {[
             'All',
@@ -297,7 +300,6 @@ export default function TimelinePage() {
           ))}
         </div>
 
-        {/* Action Button */}
         <button
           onClick={() => setModalOpen(true)}
           className="flex items-center justify-center gap-1.5 bg-brand-lavender hover:bg-brand-lavender-hover text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer shrink-0 self-end md:self-auto"
@@ -307,7 +309,6 @@ export default function TimelinePage() {
         </button>
       </div>
 
-      {/* Grid: Timeline Flow on Left, Selected Event Details on Right */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-lavender mb-4"></div>
@@ -328,7 +329,6 @@ export default function TimelinePage() {
       ) : (
         selectedEvent ? (
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-            {/* Left: Interactive Vertical Thread Timeline (3 Cols) */}
             <div className="lg:col-span-3 flex flex-col relative border-l border-brand-slate/15 ml-4 pl-6 md:pl-8 py-2 gap-6">
               {filteredEvents.map((event) => {
                 const meta = getEventMeta(event.type);
@@ -341,14 +341,12 @@ export default function TimelinePage() {
                     onClick={() => setSelectedEvent(event)}
                     className="relative group cursor-pointer"
                   >
-                    {/* Timeline circle node */}
                     <div className={`absolute -left-10.5 md:-left-12.5 top-1.5 w-9 h-9 rounded-full border flex items-center justify-center shadow-xxs transition-all ${meta.bg} ${
                       isSelected ? 'ring-2 ring-brand-plum border-brand-plum scale-110' : 'group-hover:scale-105'
                     }`}>
                       <Icon className="w-4 h-4" />
                     </div>
 
-                    {/* Event Card */}
                     <div className={`border rounded-2xl p-4 md:p-5 shadow-xxs transition-all flex flex-col gap-2 ${
                       isSelected 
                         ? 'border-brand-lavender bg-brand-lavender-light/10 ring-1 ring-brand-lavender/10' 
@@ -370,7 +368,6 @@ export default function TimelinePage() {
               })}
             </div>
 
-            {/* Right: Selected Event Details Panel (2 Cols) */}
             <div className="lg:col-span-2 lg:sticky lg:top-4 flex flex-col gap-6 w-full">
               <div className="bg-brand-card border border-brand-slate/10 p-6 rounded-3xl shadow-sm flex flex-col gap-5 animate-in fade-in duration-300">
                 <div className="flex justify-between items-start border-b border-brand-slate/10 pb-4">
@@ -394,14 +391,18 @@ export default function TimelinePage() {
                   <div>
                     <span className="font-bold text-brand-plum block">Milestone Date</span>
                     <span className="text-xs text-brand-plum">
-                      {new Date(selectedEvent.timestamp).toLocaleDateString(undefined, { 
-                        weekday: 'long',
-                        month: 'long', 
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                      {(() => {
+                        const parsed = new Date(selectedEvent.timestamp);
+                        const safeDate = isNaN(parsed.getTime()) ? new Date() : parsed;
+                        return safeDate.toLocaleDateString(undefined, { 
+                          weekday: 'long',
+                          month: 'long', 
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+                      })()}
                     </span>
                   </div>
 
@@ -420,7 +421,6 @@ export default function TimelinePage() {
                   )}
                 </div>
 
-                {/* Unified Related Feature Redirect Button */}
                 <div className="border-t border-brand-slate/10 pt-4 mt-2">
                   <Link
                     to={getEventMeta(selectedEvent.type).link}
@@ -434,7 +434,6 @@ export default function TimelinePage() {
             </div>
           </div>
         ) : (
-          /* STATE 1: NO EVENT SELECTED - Full Width 3-Column Card Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full py-2">
             {filteredEvents.map((event) => {
               const meta = getEventMeta(event.type);
@@ -445,7 +444,6 @@ export default function TimelinePage() {
                   onClick={() => setSelectedEvent(event)}
                   className="relative group cursor-pointer"
                 >
-                  {/* Event Card (no timeline thread node needed here) */}
                   <div className="border border-brand-slate/10 bg-brand-card hover:border-brand-slate/20 rounded-2xl p-5 shadow-xxs hover:shadow-xs transition-all flex flex-col gap-2 h-full">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-brand-slate/5 pb-2">
                       <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border max-w-fit ${meta.bg}`}>
@@ -465,7 +463,6 @@ export default function TimelinePage() {
         )
       )}
 
-      {/* Add Event Modal Overlay */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-plum/45 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-brand-card w-full max-w-md rounded-3xl border border-brand-slate/10 p-6 shadow-md flex flex-col gap-4 animate-in zoom-in-95 duration-200">

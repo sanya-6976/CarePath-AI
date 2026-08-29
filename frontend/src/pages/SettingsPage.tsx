@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePreferences } from '../context/PreferencesContext';
 import type { LanguageType, TextSizeType } from '../context/PreferencesContext';
 import { Globe, Bell, Eye, User, Check, ChevronDown } from 'lucide-react';
+import { companionService } from '../services/companionService';
 
 export default function SettingsPage() {
   const {
@@ -18,8 +19,8 @@ export default function SettingsPage() {
     setTextSize,
     reducedMotion,
     setReducedMotion,
-    highContrast,
-    setHighContrast
+    highContrast, setHighContrast, voiceResponses, setVoiceResponses,
+    useCarePathHistory, setUseCarePathHistory, simpleMedicalTerms, setSimpleMedicalTerms
   } = usePreferences();
 
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -37,6 +38,11 @@ export default function SettingsPage() {
     setTextSize(size);
     setTextSizeDropdownOpen(false);
   };
+
+  useEffect(() => {
+    const languageCode = language === 'Hindi' ? 'hi' : 'en';
+    companionService.savePreferences({ language: languageCode, voice_responses: voiceResponses, use_carepath_history: useCarePathHistory, simple_medical_terms: simpleMedicalTerms }).catch(() => undefined);
+  }, [language, voiceResponses, useCarePathHistory, simpleMedicalTerms]);
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-6 animate-in fade-in duration-300 pb-16">
@@ -59,7 +65,6 @@ export default function SettingsPage() {
             <span className="text-xs text-brand-slate font-light">Choose the language you prefer for your CarePath experience.</span>
           </div>
 
-          {/* Custom Select Box */}
           <div className="relative w-full sm:w-48">
             <button
               onClick={toggleLangDropdown}
@@ -89,6 +94,18 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      <section className="bg-brand-card border border-brand-slate/10 rounded-2xl p-6 shadow-xs flex flex-col gap-4">
+        <div className="flex items-center gap-3 border-b border-brand-slate/10 pb-3">
+          <div className="w-8 h-8 rounded-xl bg-brand-lavender-light text-brand-lavender flex items-center justify-center"><Globe className="w-4.5 h-4.5" /></div>
+          <div><h2 className="font-display font-bold text-base text-brand-plum">Companion preferences</h2><p className="text-xxs text-brand-slate font-light">Control how CarePath Companion uses your information and voice.</p></div>
+        </div>
+        {[
+          ['Voice responses', 'Allow the Companion to read a response aloud when you choose Listen.', voiceResponses, setVoiceResponses],
+          ['Use CarePath history', 'When on, the Companion may use your saved CarePath records. Turn this off to chat without medical history.', useCarePathHistory, setUseCarePathHistory],
+          ['Explain medical terms simply', 'Use clearer, less technical language in Companion answers.', simpleMedicalTerms, setSimpleMedicalTerms],
+        ].map(([label, detail, value, setValue]) => <div key={label as string} className="flex items-center justify-between gap-4 pt-2"><div><span className="text-sm font-semibold text-brand-plum block">{label as string}</span><span className="text-xs text-brand-slate font-light">{detail as string}</span></div><button onClick={() => (setValue as (v: boolean) => void)(!(value as boolean))} aria-label={`Toggle ${label as string}`} className={`w-11 h-6 shrink-0 rounded-full transition-all relative ${(value as boolean) ? 'bg-brand-lavender' : 'bg-brand-slate/20'}`}><div className={`w-4.5 h-4.5 rounded-full bg-white absolute top-0.75 left-0.75 transition-all shadow-xs ${(value as boolean) ? 'translate-x-5' : ''}`} /></button></div>)}
+      </section>
+
       {/* 2. NOTIFICATIONS CARD */}
       <section className="bg-brand-card border border-brand-slate/10 rounded-2xl p-6 shadow-xs flex flex-col gap-4">
         <div className="flex items-center gap-3 border-b border-brand-slate/10 pb-3">
@@ -102,7 +119,6 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex flex-col gap-4 divide-y divide-brand-slate/5">
-          {/* Item 1 */}
           <div className="flex items-center justify-between pt-1">
             <div>
               <span className="text-sm font-semibold text-brand-plum block">Follow-up reminders</span>
@@ -123,7 +139,6 @@ export default function SettingsPage() {
             </button>
           </div>
 
-          {/* Item 2 */}
           <div className="flex items-center justify-between pt-3">
             <div>
               <span className="text-sm font-semibold text-brand-plum block">Appointment reminders</span>
@@ -144,7 +159,6 @@ export default function SettingsPage() {
             </button>
           </div>
 
-          {/* Item 3 */}
           <div className="flex items-center justify-between pt-3">
             <div>
               <span className="text-sm font-semibold text-brand-plum block">Recovery updates</span>
@@ -167,7 +181,7 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* 3. ACCESSIBILITY CARD ("Make CarePath easier to use") */}
+      {/* 3. ACCESSIBILITY CARD */}
       <section className="bg-brand-card border border-brand-slate/10 rounded-2xl p-6 shadow-xs flex flex-col gap-4">
         <div className="flex items-center gap-3 border-b border-brand-slate/10 pb-3">
           <div className="w-8 h-8 rounded-xl bg-brand-lavender-light text-brand-lavender flex items-center justify-center">
@@ -180,7 +194,6 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex flex-col gap-4 divide-y divide-brand-slate/5">
-          {/* Dropdown Selector */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
             <div>
               <span className="text-sm font-semibold text-brand-plum block">Text size</span>
@@ -215,7 +228,6 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Switch 1 */}
           <div className="flex items-center justify-between pt-3">
             <div>
               <span className="text-sm font-semibold text-brand-plum block">Reduced motion</span>
@@ -236,7 +248,6 @@ export default function SettingsPage() {
             </button>
           </div>
 
-          {/* Switch 2 */}
           <div className="flex items-center justify-between pt-3">
             <div>
               <span className="text-sm font-semibold text-brand-plum block">High contrast</span>
@@ -258,7 +269,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </section>
-
 
       {/* 5. GENERAL CARD */}
       <section className="bg-brand-card border border-brand-slate/10 rounded-2xl p-6 shadow-xs flex flex-col gap-4">

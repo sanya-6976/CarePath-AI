@@ -11,6 +11,10 @@ backend/.env.*
 __pycache__/
 *.pyc
 .pytest_cache/
+.carepath_venv/
+.carepath_pydeps/
+.venv/
+venv/
 
 # Node runtime & build outputs
 node_modules/
@@ -20,4 +24,7 @@ dist/
 # Local storage & data
 data/chroma_db/
 *.sqlite3
+*.db
 uploads/
+backend/carepath_local.db
+carepath_local.db
