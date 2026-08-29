@@ -10,33 +10,39 @@ import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
-# Add project root to sys.path
+# Ensure backend_dir is at sys.path[0] and merge package search paths
 backend_app_dir = os.path.abspath(os.path.dirname(__file__))
 backend_dir = os.path.abspath(os.path.join(backend_app_dir, ".."))
 project_root = os.path.abspath(os.path.join(backend_dir, ".."))
 root_app_dir = os.path.abspath(os.path.join(project_root, "app"))
 
+if backend_dir in sys.path:
+    sys.path.remove(backend_dir)
+sys.path.insert(0, backend_dir)
+
 if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+    sys.path.append(project_root)
 
-# Unify top-level 'app' package
-if "app" in sys.modules and hasattr(sys.modules["app"], "__path__"):
-    if root_app_dir not in sys.modules["app"].__path__:
-        sys.modules["app"].__path__.append(root_app_dir)
+# Explicitly import 'app' and unify package search paths
+import app
+if hasattr(app, "__path__"):
+    if backend_app_dir not in app.__path__:
+        app.__path__.insert(0, backend_app_dir)
+    if root_app_dir not in app.__path__ and os.path.exists(root_app_dir):
+        app.__path__.append(root_app_dir)
 
-# Unify all sub-packages (core, services, schemas, models, api)
-for subpkg in ["core", "services", "schemas", "models", "api"]:
+# Unify sub-packages (api, core, services, schemas, models, database)
+for subpkg in ["api", "core", "services", "schemas", "models", "database"]:
     pkg_name = f"app.{subpkg}"
-    backend_sub = os.path.join(backend_app_dir, subpkg)
-    root_sub = os.path.join(root_app_dir, subpkg)
     try:
         mod = __import__(pkg_name, fromlist=["__path__"])
         if hasattr(mod, "__path__"):
-            if root_sub not in mod.__path__ and os.path.exists(root_sub):
-                mod.__path__.append(root_sub)
-            if backend_sub not in mod.__path__ and os.path.exists(backend_sub):
-                if backend_sub not in mod.__path__:
-                    mod.__path__.insert(0, backend_sub)
+            b_sub = os.path.join(backend_app_dir, subpkg)
+            r_sub = os.path.join(root_app_dir, subpkg)
+            if b_sub not in mod.__path__ and os.path.exists(b_sub):
+                mod.__path__.insert(0, b_sub)
+            if r_sub not in mod.__path__ and os.path.exists(r_sub):
+                mod.__path__.append(r_sub)
     except Exception:
         pass
 
