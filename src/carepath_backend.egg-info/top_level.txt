@@ -1,0 +1,14 @@
+agents
+api
+assets
+components
+config
+context
+core
+data
+layouts
+main
+pages
+schemas
+services
+types

@@ -1,0 +1,6 @@
+{
+  "name": "CarePath AI Architecture Command Center",
+  "description": "Autonomous Healthcare Navigation Platform - Production Architecture Blueprint, LangGraph Multi-Agent Visualizer, and API Explorer",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
