@@ -26,13 +26,13 @@ export function PatientProvider({ children }: { children: React.ReactNode }) {
       setPatient({
         id: 'demo_patient_id',
         user_id: 'demo_user',
-        name: 'Jane Doe',
-        age: 34,
-        gender: 'Female',
+        name: 'Aryan Nair',
+        age: 32,
+        gender: 'Male',
         blood_type: 'O+',
-        allergies: ['Penicillin', 'Peanuts'],
-        medical_history: 'Mild asthma, appendectomy in 2018.',
-        current_symptoms: 'Persistent dry cough, mild shortness of breath during exertion for 3 days, no fever.',
+        allergies: ['Dust Mites', 'Pollen'],
+        medical_history: 'Mild Bronchial Hyperreactivity & Seasonal Allergies.',
+        current_symptoms: 'Nocturnal dry cough and mild exertional dyspnea for 3 days.',
       });
       return;
     }
@@ -47,13 +47,13 @@ export function PatientProvider({ children }: { children: React.ReactNode }) {
       setPatient({
         id: id,
         user_id: id,
-        name: 'Jane Doe',
-        age: 30,
-        gender: 'Female',
+        name: 'Aryan Nair',
+        age: 32,
+        gender: 'Male',
         blood_type: 'O+',
-        allergies: [],
-        medical_history: '',
-        current_symptoms: '',
+        allergies: ['Dust Mites', 'Pollen'],
+        medical_history: 'Mild Bronchial Hyperreactivity & Seasonal Allergies.',
+        current_symptoms: 'Nocturnal dry cough and mild exertional dyspnea for 3 days.',
       });
     } finally {
       setIsLoading(false);

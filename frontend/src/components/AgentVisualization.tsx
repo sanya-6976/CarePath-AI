@@ -21,6 +21,8 @@ export interface AgentInfo {
     context: string[];
     reason_for_execution?: string;
     user_action_required?: string;
+    actionLabel?: string;
+    actionRoute?: string;
 }
 
 const AGENTS: AgentInfo[] = [

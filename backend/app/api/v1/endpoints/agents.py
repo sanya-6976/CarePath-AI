@@ -54,7 +54,7 @@ async def orchestrate_agents(payload: OrchestrationRequest):
     """
     Triggers the autonomous 11-agent LangGraph orchestration pipeline.
     """
-    logger.info("Starting Multi-Agent Orchestration", session_id=payload.session_id, prompt=payload.raw_prompt[:60])
+    logger.info(f"Starting Multi-Agent Orchestration session_id={payload.session_id} prompt={payload.raw_prompt[:60]}")
     try:
         final_state = await run_carepath_agents(
             session_id=payload.session_id,
@@ -91,7 +91,7 @@ async def orchestrate_agents(payload: OrchestrationRequest):
             followup_scheduled=to_dict(final_state.get("followup_scheduled"))
         )
     except Exception as e:
-        logger.error("Multi-Agent Orchestration Failed", error=str(e))
+        logger.error(f"Multi-Agent Orchestration Failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Agent workflow error: {str(e)}")
 
 
@@ -103,7 +103,7 @@ async def stream_orchestrate_agents(
     """
     Triggers the autonomous 11-agent LangGraph orchestration pipeline and streams progress via SSE.
     """
-    logger.info("Starting Multi-Agent Orchestration Stream", session_id=payload.session_id)
+    logger.info(f"Starting Multi-Agent Orchestration Stream session_id={payload.session_id}")
 
     async def event_generator():
         try:
@@ -148,11 +148,11 @@ async def stream_orchestrate_agents(
                 yield f"data: {json.dumps({'status': 'done', 'analysis_id': str(analysis.analysis_id)})}\n\n"
             except Exception as e:
                 db.rollback()
-                logger.error("Failed to save analysis during stream", error=str(e))
+                logger.error(f"Failed to save analysis during stream: {str(e)}")
                 yield f"data: {json.dumps({'status': 'error', 'message': 'Failed to save analysis'})}\n\n"
                 
         except Exception as e:
-            logger.error("Multi-Agent Orchestration Stream Failed", error=str(e))
+            logger.error(f"Multi-Agent Orchestration Stream Failed: {str(e)}")
             yield f"data: {json.dumps({'status': 'error', 'message': str(e)})}\n\n"
             
     return StreamingResponse(event_generator(), media_type="text/event-stream")
