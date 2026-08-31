@@ -1400,10 +1400,13 @@ CarePath AI is benchmarked across system latency budgets, multi-agent execution 
 
 | Domain Category | Operational Metric | Production Target / Value | Validation Method |
 | :--- | :--- | :--- | :--- |
-| 🧩 **Specialized AI Agents** | Multi-Agent Execution Nodes | **14 Agents** (11 LangGraph Nodes + 3 Aux Services) | LangGraph Topology Inspection |
-| 🔌 **API Architecture** | Router Categories & Endpoints | **16 Router Categories** (40+ REST & SSE Endpoints) | OpenAPI Schema / FastAPI Routes |
-| 🗄️ **Data Persistence** | Relational Database Schema | **19 Core Tables** across 5 Functional Domains | PostgreSQL Schema Inspection |
-| 🔗 **Entity Integrity** | Schema Foreign Key Relationships | **10 Core Entity Relationships** | SQLAlchemy Declarative Models |
+| 🧩 **Specialized AI Agents** | LangGraph Execution Nodes | **14 Nodes** (11 Graph Nodes + 3 Aux Services) | LangGraph Topology Inspection |
+| 📋 **Validation Schemas** | Pydantic Request/Response Models | **116 Typed Schemas** | Pydantic V2 Model Inspection |
+| 🗄️ **Database Models** | ORM Model Classes | **31 Database Models** (19 Relational Tables) | SQLAlchemy 2.0 Declarative Registry |
+| 🔌 **API Routers** | Router Modules & Endpoints | **37 Routers** (78 Endpoints across 16 Categories) | FastAPI Router Registry |
+| 🔗 **AI Service Contracts** | AI & Model Abstraction Layer | **29 Service Contracts** | Provider Interface Contract Suite |
+| 🧪 **Test Suite** | Unit & Integration Test Suite | **42 Test Files** (88% Test Coverage) | Pytest Automation Suite |
+| 📡 **Real-Time Streaming** | SSE Broadcast Events | **41 Event Types** (< 50ms Latency) | SSE Streaming Generator |
 | ⚡ **End-to-End Graph SLA** | P50 Workflow Response Latency | **< 2.5 seconds** | Multi-Agent Pipeline Benchmark |
 | ⚡ **End-to-End Graph SLA** | P95 Workflow Response Latency | **< 4.8 seconds** (Includes OCR + RAG) | Multi-Agent Pipeline Benchmark |
 | 💬 **Companion Chat SLA** | Record-Grounded Query Latency | **< 450 ms** | Companion Context Service |
@@ -1412,7 +1415,6 @@ CarePath AI is benchmarked across system latency budgets, multi-agent execution 
 | 🛡️ **Safety Agent SLA** | Emergency Red-Flag Interruption | **< 10 ms** (Immediate Supervisor Preemption) | Deterministic Guard Validation |
 | 📚 **RAG Engine** | Vector Embedding Dimension | **768 Dimensions** (Cosine Similarity Retrieval) | ChromaDB Vector Store Config |
 | 🗄️ **Database Pool** | Connection Concurrency Pool | **20 Connections** (10 Base + 10 Overflow) | SQLAlchemy Engine Config |
-| 📡 **Real-Time Streaming** | SSE Broadcast Latency | **< 50 ms** Event Propagation | FastAPI Event Generator |
 | 🧪 **Frontend QA** | TypeScript & ESLint Compliance | **100% Strict Pass** (`npm run lint` PASS) | ESLint 9 Static Validator |
 | 🧪 **Backend QA** | Python Syntax & Module Integrity | **100% Compilation Pass** (`py_compile` PASS) | Python 3.13 Standard Compiler |
 
