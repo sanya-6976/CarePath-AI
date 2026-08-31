@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/logo.png" alt="CarePath AI Logo" width="180">
+  <img src="images/WhatsApp Image 2026-08-31 at 12.30.17 AM.jpeg" alt="CarePath AI Logo" width="180">
 </p>
 
 <h1 align="center">CarePath AI</h1>
