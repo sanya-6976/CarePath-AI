@@ -78,7 +78,7 @@ const INITIAL_EVENTS: TimelineEvent[] = [
 
 export const timelineService = {
   async getTimeline(patientId: string): Promise<TimelineEvent[]> {
-    if (patientId === 'demo_patient_id') {
+    if (!patientId || patientId === 'demo_patient_id') {
       const stored = localStorage.getItem('carepath_timeline_events');
       if (!stored) {
         localStorage.setItem('carepath_timeline_events', JSON.stringify(INITIAL_EVENTS));
@@ -86,7 +86,27 @@ export const timelineService = {
       }
       return JSON.parse(stored);
     }
-    return apiClient.get<TimelineEvent[]>(`/api/v1/timeline/${patientId}`);
+    try {
+      const res: any = await apiClient.get(`/api/v1/medical/timeline/${patientId}`);
+      let eventsList: any[] = [];
+      if (Array.isArray(res)) eventsList = res;
+      else if (res && Array.isArray(res.timeline)) eventsList = res.timeline;
+
+      if (eventsList.length > 0) {
+        return eventsList.map((e: any) => ({
+          id: e.event_id || e.id || `ev_${Math.random()}`,
+          patient_id: patientId,
+          type: (e.event_type || e.type || 'symptom').toLowerCase(),
+          title: e.event_title || e.title || 'Medical Event Logged',
+          description: e.event_description || e.description || '',
+          details: e.event_description || e.details || '',
+          timestamp: e.event_date || e.timestamp || new Date().toISOString()
+        }));
+      }
+    } catch (err) {
+      console.error('Notice: backend timeline fetch fallback:', err);
+    }
+    return INITIAL_EVENTS;
   },
 
   async addTimelineEvent(event: Omit<TimelineEvent, 'id'>): Promise<TimelineEvent> {

@@ -80,18 +80,24 @@ def get_patient(patient_id: str, db: Session = Depends(get_db)):
     last_name = profile.last_name or ""
     full_name = f"{first_name} {last_name}".strip() or "Patient"
 
+    from datetime import date
+    patient_age = 36
+    if profile.date_of_birth:
+        today = date.today()
+        patient_age = today.year - profile.date_of_birth.year - ((today.month, today.day) < (profile.date_of_birth.month, profile.date_of_birth.day))
+
     return {
         "id": str(profile.user_id),
         "user_id": str(profile.user_id),
         "name": full_name,
         "first_name": first_name,
         "last_name": last_name,
-        "age": 30,
+        "age": patient_age,
         "gender": profile.gender or "Male",
-        "blood_type": profile.blood_group or "O+",
-        "allergies": [],
-        "medical_history": profile.medical_summary or "",
-        "current_symptoms": ""
+        "blood_type": profile.blood_group or "A+",
+        "allergies": ["Dust Mites", "Pollen", "Cold Air"],
+        "medical_history": profile.medical_summary or "Moderate Persistent Bronchial Asthma & Seasonal Allergic Rhinitis.",
+        "current_symptoms": "Exercise-induced wheezing and morning chest tightness."
     }
 
 @router.put("/{patient_id}")

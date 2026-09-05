@@ -167,8 +167,8 @@ export default function DashBoardingPage() {
     }
   };
 
-  const patientName = patient?.name || user?.name || 'Jane Doe';
-  const careJourneyDay = patient?.id === 'demo_patient_id' ? '4' : '1';
+  const patientName = patient?.name || (user?.name ? user.name : (user?.email ? user.email.split('@')[0].toUpperCase() : 'Test User'));
+  const careJourneyDay = patient?.id === 'demo_patient_id' ? '4' : '3';
 
   const stages = [
     { num: 1, label: 'Symptoms Logged', desc: 'Initial symptoms recorded' },
