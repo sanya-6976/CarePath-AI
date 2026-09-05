@@ -21,6 +21,26 @@ import {
 } from 'lucide-react';
 import type { AnalysisResult } from '../types';
 
+function sanitizePlainEnglish(rawText: string): string {
+  if (!rawText) return "Based on your uploaded medical documents, CarePath reviewed your health records to formulate your care recommendation.";
+  let text = rawText;
+  
+  // Remove repetitive machine boilerplate phrases
+  text = text.replace(/CarePath AI analyzed ['"][^'"]+['"]\.?/gi, "");
+  text = text.replace(/Clinical Overview for ['"][^'"]+['"]:\s*/gi, "");
+  text = text.replace(/All extracted medications, laboratory findings, diagnoses, and symptom parameters have been integrated into your patient memory graph for longitudinal multi-agent tracking\.?/gi, "");
+  text = text.replace(/integrated into your patient memory graph for longitudinal multi-agent tracking\.?/gi, "");
+
+  // Clean up whitespace & punctuation
+  text = text.replace(/\s+/g, " ").replace(/\s+\./g, ".").replace(/\.\.+/g, ".").trim();
+
+  if (!text || text.length < 10) {
+    return "Based on your uploaded medical documents, CarePath reviewed your current medications, lab results, and reported symptoms to formulate your care recommendation.";
+  }
+
+  return text;
+}
+
 export default function RecommendationPage() {
   const { patient } = usePatient();
   const [latestAnalysis, setLatestAnalysis] = useState<AnalysisResult | null>(null);
@@ -82,7 +102,8 @@ export default function RecommendationPage() {
           if (symptoms.length > 0) factors.push(`Symptoms: ${symptoms.join(', ')}`);
           if (factors.length === 0 && overviews.length > 0) factors.push(overviews[0]);
 
-          const explanationText = insights.join(" ") || overviews.join(" ") || (backendItem ? backendItem.summary : "Clinical multi-agent reasoning complete over uploaded records.");
+          const rawTextToClean = insights.join(" ") || overviews.join(" ") || (backendItem ? backendItem.summary : "");
+          const explanationText = sanitizePlainEnglish(rawTextToClean);
 
           setLatestAnalysis({
             id: backendItem?.id || 'uploaded_files_analysis',
@@ -103,8 +124,8 @@ export default function RecommendationPage() {
             patient_id: patient?.id || 'user_patient',
             status: 'completed',
             specialist_recommendation: backendItem.specialist_recommendation || "Internal Medicine Specialist",
-            explanation: backendItem.summary || backendItem.findings || "CarePath multi-agent analysis finalized.",
-            considered_factors: [backendItem.summary || "Clinical diagnostic data parsed."],
+            explanation: sanitizePlainEnglish(backendItem.summary || backendItem.findings || ""),
+            considered_factors: [sanitizePlainEnglish(backendItem.summary || "Clinical diagnostic data parsed.")],
             safety_alerts: ["If severe symptoms develop, seek emergency medical care immediately."],
             created_at: backendItem.created_at || new Date().toISOString(),
             changed_factors: backendItem.changed_factors ? JSON.parse(backendItem.changed_factors) : undefined,

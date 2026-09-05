@@ -67,9 +67,9 @@ def generate_clinical_document_summary(
             import json
             prompt = (
                 f"You are a friendly clinical AI assistant for CarePath AI.\n"
-                f"Analyze this uploaded medical document and create a short, concise, patient-friendly summary in clear plain language.\n"
-                f"Write ONLY 1-2 simple, easy-to-understand sentences describing what this document is about (e.g. key diagnoses, prescribed medicines, lab test results, or main symptoms).\n"
-                f"Avoid complex medical jargon so any patient can understand it immediately.\n\n"
+                f"Analyze this uploaded medical document and create a short, concise, patient-friendly summary in plain, easy-to-understand English.\n"
+                f"Write ONLY 1-2 simple sentences describing what this document is about (e.g. key diagnoses, prescribed medicines, lab test results, or main symptoms).\n"
+                f"Avoid complex medical jargon or technical machine phrases (e.g. 'multi-agent tracking', 'patient memory graph', 'extracted parameters'). Write warmly and directly in plain English for a patient.\n\n"
                 f"Produce a JSON response with two keys:\n"
                 f"1. 'overview': A concise 1-2 sentence plain-language summary of the document for the patient timeline.\n"
                 f"2. 'ai_insight': A concise 1-2 sentence key takeaway explaining what the patient should know or do next.\n\n"
@@ -108,24 +108,24 @@ def generate_clinical_document_summary(
     summary_parts = []
     
     if conditions:
-        summary_parts.append(f"Diagnosis: {', '.join(conditions)}")
+        summary_parts.append(f"Diagnoses noted: {', '.join(conditions)}")
     if medicines:
-        summary_parts.append(f"Prescribed: {', '.join(medicines)}")
+        summary_parts.append(f"Prescribed medications: {', '.join(medicines)}")
     if measurements:
-        summary_parts.append(f"Lab Results: {', '.join(measurements)}")
+        summary_parts.append(f"Key lab findings: {', '.join(measurements)}")
     elif tests:
-        summary_parts.append(f"Tests: {', '.join(tests)}")
+        summary_parts.append(f"Tests ordered: {', '.join(tests)}")
     if symptoms:
-        summary_parts.append(f"Symptoms: {', '.join(symptoms)}")
+        summary_parts.append(f"Reported symptoms: {', '.join(symptoms)}")
 
     if summary_parts:
-        overview_text = f"Uploaded {category} ({filename}): " + "; ".join(summary_parts) + "."
+        overview_text = f"Overview for {category} ({filename}): " + "; ".join(summary_parts) + "."
     else:
-        overview_text = f"Uploaded {category} '{filename}' added to your health records."
+        overview_text = f"Your uploaded {category.lower()} '{filename}' was reviewed and saved to your health timeline."
 
     ai_insight_text = (
-        f"CarePath reviewed '{filename}'. All extracted medications, test findings, and diagnoses "
-        f"have been saved to your health timeline."
+        f"Your uploaded {category.lower()} ({filename}) has been reviewed. "
+        f"The relevant medical details have been safely stored in your health record."
     )
 
     return overview_text, ai_insight_text

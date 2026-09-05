@@ -22,12 +22,17 @@ import datetime
 import json
 import asyncio
 
-from database.models import PatientUpdate, TimelineEvent, AIAnalysis
+try:
+    from database.models import PatientUpdate, TimelineEvent, AIAnalysis, SymptomSession
+    from database.connections import get_db
+except ImportError:
+    from app.database.models import PatientUpdate, TimelineEvent, AIAnalysis, SymptomSession
+    from app.database.connections import get_db
+
 from app.core.security import get_current_user, verify_patient_ownership
 
 
 def _get_db():
-    from database.connections import get_db
     yield from get_db()
 
 
@@ -72,14 +77,15 @@ def add_patient_update(
         )
         db.add(new_update)
 
+        event_type_val = req.update_type.lower() if req.update_type.lower() in ['symptom', 'visit', 'medication', 'analysis', 'milestone'] else 'symptom'
         timeline_event = TimelineEvent(
             event_id=uuid.uuid4(),
             user_id=uuid.UUID(req.patient_id),
-            event_type="patient_update",
+            event_type=event_type_val,
             event_date=datetime.datetime.now(datetime.timezone.utc),
             event_title=f"Patient Update: {req.update_type}",
             event_description=req.content,
-            severity="info",
+            severity="mild",
             visible_to_patient=True,
             created_at=datetime.datetime.now(datetime.timezone.utc),
         )
@@ -294,18 +300,36 @@ async def trigger_analysis(
     except Exception:
         referral_json = care_plan_json = follow_up_json = None
 
+    now_ts = datetime.datetime.now(datetime.timezone.utc)
+    session_id_val = uuid.uuid4()
+    session_type_val = "reassessment" if prev_analysis_record else "initial"
+    new_session = SymptomSession(
+        session_id=session_id_val,
+        user_id=uuid.UUID(req.patient_id),
+        session_date=now_ts,
+        session_type=session_type_val,
+        status="completed",
+        created_at=now_ts,
+        updated_at=now_ts,
+    )
+    db.add(new_session)
+
     new_analysis = AIAnalysis(
         analysis_id=uuid.uuid4(),
         user_id=uuid.UUID(req.patient_id),
-        analysis_type="longitudinal_assessment",
+        session_id=session_id_val,
+        analysis_type="differential_diagnosis",
         findings=findings_text,
         differential_list=differential,
+        confidence_score=0.85,
+        risk_level="medium",
         summary=summary_text,
         previous_analysis_id=prev_analysis_record.analysis_id if prev_analysis_record else None,
         changed_factors=json.dumps(agent_changed_factors) if agent_changed_factors else None,
         new_information=json.dumps(agent_new_information) if agent_new_information else None,
         missing_information=json.dumps(agent_missing_information) if agent_missing_information else None,
-        created_at=datetime.datetime.now(datetime.timezone.utc),
+        created_at=now_ts,
+        updated_at=now_ts,
     )
 
     try:

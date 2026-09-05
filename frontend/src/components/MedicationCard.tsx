@@ -110,10 +110,10 @@ export default function MedicationCard({
         <div className="flex flex-col gap-1">
           <span className="font-bold text-brand-plum flex items-center gap-1.5 text-[10px] uppercase tracking-wider">
             <Target className="w-3.5 h-3.5 text-brand-lavender shrink-0" />
-            Main Purpose (Why Given)
+            Why You Take This
           </span>
           <p className="text-brand-slate font-light leading-relaxed">
-            {medication.purpose || 'Prescribed for primary symptom and disease management.'}
+            {medication.purpose || 'Prescribed by your doctor to manage your health condition and symptoms.'}
           </p>
         </div>
 
@@ -121,21 +121,21 @@ export default function MedicationCard({
         <div className="flex flex-col gap-1">
           <span className="font-bold text-brand-plum flex items-center gap-1.5 text-[10px] uppercase tracking-wider">
             <Activity className="w-3.5 h-3.5 text-brand-sage-text shrink-0" />
-            Mode of Intake & Administration
+            How To Take It
           </span>
           <p className="text-brand-slate font-light leading-relaxed">
             {medication.modeOfIntake || medication.instructions}
           </p>
         </div>
 
-        {/* 3. Regimen & Replacement Notes */}
+        {/* 3. Regimen & Instructions */}
         <div className="flex flex-col gap-1">
           <span className="font-bold text-brand-plum flex items-center gap-1.5 text-[10px] uppercase tracking-wider">
             <RefreshCw className="w-3.5 h-3.5 text-brand-amber-text shrink-0" />
-            Regimen & Replacement Status
+            Instructions & Advice
           </span>
           <p className="text-brand-slate font-light leading-relaxed">
-            {medication.replacementNotes || 'Active therapy maintained from uploaded prescription records.'}
+            {medication.replacementNotes || medication.instructions || 'Follow your prescribed schedule and keep taking as directed.'}
           </p>
         </div>
       </div>

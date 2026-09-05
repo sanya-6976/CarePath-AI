@@ -54,10 +54,10 @@ export default function LoginPage() {
       console.error('Login error:', err);
       setError(
         err.message === 'Failed to fetch'
-          ? 'Cannot connect to backend server. Ensure the API service is running at https://carepath-ai-production-508e.up.railway.app.'
+          ? `Cannot connect to backend server. Ensure the API service is running at ${import.meta.env.VITE_API_URL || 'http://localhost:8000'}.`
           : err.message || 'Login failed. Please verify your email and password.'
       );
-    } fontIsLoading: {
+    } finally {
       setIsLoading(false);
     }
   };

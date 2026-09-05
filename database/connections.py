@@ -43,6 +43,8 @@ def _init_db_engine():
                 pass
             engine = temp_engine
             SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+            import database.models
+            Base.metadata.create_all(bind=engine)
             print("[INFO] Successfully connected to PostgreSQL database.")
             return
         except Exception as err:

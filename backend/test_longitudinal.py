@@ -18,6 +18,13 @@ Flow tested:
   12. Verify FORBIDDEN for wrong patient (403)
 """
 
+import sys
+import os
+backend_dir = os.path.abspath(os.path.dirname(__file__))
+if backend_dir in sys.path:
+    sys.path.remove(backend_dir)
+sys.path.insert(0, backend_dir)
+
 import pytest
 import uuid
 from fastapi.testclient import TestClient
