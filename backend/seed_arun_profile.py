@@ -197,7 +197,7 @@ def seed_arun_profile():
             "250/50 mcg (1 Puff)",
             "Twice daily (Morning & Evening)",
             "Ongoing",
-            "Inhaled",
+            "Inhalation",
             (now - timedelta(days=14)).date(),
             "Prevents asthma attacks and reduces airway inflammation over time.",
             "Inhale 1 puff twice daily. Always rinse your mouth with water after use."
@@ -207,7 +207,7 @@ def seed_arun_profile():
             "90 mcg (2 Puffs)",
             "Every 4-6 hours as needed",
             "As Needed",
-            "Inhaled",
+            "Inhalation",
             (now - timedelta(days=30)).date(),
             "Relieves wheezing, chest tightness, and shortness of breath by opening up your airways.",
             "Inhale 2 puffs using your inhaler whenever sudden breathing symptoms start."
@@ -255,7 +255,7 @@ def seed_arun_profile():
         findings="FEV1 71% with 14% bronchodilator reversibility confirms Moderate Persistent Bronchial Asthma with exercise-induced wheezing.",
         differential_list="1. Moderate Persistent Bronchial Asthma\n2. Exercise-Induced Bronchospasm\n3. Seasonal Allergic Rhinitis",
         confidence_score=0.92,
-        risk_level="routine",
+        risk_level="medium",
         summary="CarePath recommends Pulmonology evaluation for asthma action plan optimization and inhaler technique review.",
         changed_factors='["Increased morning chest tightness post-exercise", "Rescue inhaler use increased to 3 times weekly"]',
         new_information='["Spirometry PFT report showing 14% FEV1 reversibility uploaded"]',
@@ -269,7 +269,7 @@ def seed_arun_profile():
         recommendation_id=uuid.uuid4(),
         analysis_id=analysis_id,
         user_id=user_id,
-        recommendation_type="specialist_referral",
+        recommendation_type="specialist",
         specialist_type="Pulmonology",
         title="Pulmonology Asthma Review Recommended",
         description="Persistent exercise-induced shortness of breath and spirometry FEV1 reversibility warrant specialist care plan tuning.",
@@ -277,7 +277,7 @@ def seed_arun_profile():
         urgency="routine",
         rationale="PFT spirometry confirms reversible bronchial obstruction (FEV1 71%). Pulmonologist consultation supports optimal asthma control.",
         estimated_timeline="Within 2-3 weeks",
-        status="active",
+        status="pending",
         created_at=now - timedelta(days=1),
         updated_at=now
     )
@@ -309,7 +309,7 @@ def seed_arun_profile():
         followup_id=uuid.uuid4(),
         user_id=user_id,
         plan_id=plan_id,
-        followup_type="Specialist Visit",
+        followup_type="review",
         scheduled_date=now + timedelta(days=7),
         description="Follow-up Pulmonology Consultation & Asthma Action Plan Review",
         purpose="Evaluate response to combination inhaler therapy and review peak flow monitoring.",
@@ -327,7 +327,7 @@ def seed_arun_profile():
         (now - timedelta(days=28), "visit", "Pulmonary Function Test (Spirometry) Completed", "Spirometry demonstrated FEV1 of 71% predicted with +14% bronchodilator reversibility.", "mild"),
         (now - timedelta(days=14), "medication", "Prescription Started: Combination Inhaler Regimen", "Started daily Fluticasone/Salmeterol 250/50 mcg and Montelukast 10 mg bedtime tablet.", "mild"),
         (now - timedelta(days=3), "symptom", "Reported Exercise-Induced Morning Chest Tightness", "Logged morning chest tightness following outdoor exercise in cold temperature.", "moderate"),
-        (now - timedelta(days=1), "analysis", "CarePath Multi-Agent Analysis Completed", "Synthesized PFT report, symptoms, and prescription records. Recommended Pulmonology review.", "routine")
+        (now - timedelta(days=1), "analysis", "CarePath Multi-Agent Analysis Completed", "Synthesized PFT report, symptoms, and prescription records. Recommended Pulmonology review.", "mild")
     ]
 
     for ev_date, ev_type, ev_title, ev_desc, ev_sev in events_data:

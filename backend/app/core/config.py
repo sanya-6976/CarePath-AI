@@ -25,8 +25,8 @@ class Settings(BaseSettings):
     # Security & Authentication
     SECRET_KEY: str = "super_secret_temporary_key_change_in_production_1234567890"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     PASSWORD_SALT: str = "carepath_security_salt_2026"
 
     # Network & Server

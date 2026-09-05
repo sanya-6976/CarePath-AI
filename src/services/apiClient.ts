@@ -64,12 +64,19 @@ class ApiClient {
     return this.handleResponse<T>(response);
   }
 
+  private isExpiring = false;
+
   private async handleResponse<T>(response: Response): Promise<T> {
     if (response.status === 401) {
-      // Auth expired or invalid, clear local storage
-      localStorage.removeItem('carepath_token');
-      localStorage.removeItem('carepath_patient_id');
-      window.dispatchEvent(new Event('auth_expired'));
+      if (!this.isExpiring) {
+        this.isExpiring = true;
+        localStorage.removeItem('carepath_token');
+        localStorage.removeItem('carepath_patient_id');
+        window.dispatchEvent(new Event('auth_expired'));
+        setTimeout(() => {
+          this.isExpiring = false;
+        }, 5000);
+      }
       throw new Error('Session expired. Please sign in again.');
     }
 
