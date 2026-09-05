@@ -116,4 +116,7 @@ def supervisor_router(state: CarePathState) -> str:
     if not state.get("follow_up_schedule"):
         return "follow_up"
 
+    if state.get("grok_review") is None:
+        return "groq_reviewer"
+
     return "__end__"

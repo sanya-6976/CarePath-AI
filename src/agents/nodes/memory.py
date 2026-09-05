@@ -1,37 +1,45 @@
-from datetime import datetime
+"""
+CarePath AI — Memory Agent Node
+===============================
+Retrieves relevant persistent patient history across encounters, structuring historical context
+without dumping full unstructured database blobs.
+"""
+
+from datetime import datetime, timezone
 from typing import Dict, Any, List
 from src.agents.state import CarePathState
-from src.repositories.sprint2_repo import memory_repository
 from src.core.logging import logger
 
 
 async def memory_node(state: CarePathState) -> Dict[str, Any]:
     """
-    LangGraph Node — CarePath Memory Agent.
-    Retrieves relevant historical patient context before Supervisor reasoning.
-    Does NOT blindly load full history.
+    LangGraph Node — Memory Agent.
+    Aggregates historical encounter context for the current patient.
     """
     encounter_id = state.get("encounter_id", "unknown")
-    patient_id = state.get("patient_id", "pat_unknown")
+    patient_id = state.get("patient_id", "unknown")
     logger.info("executing_memory_node", encounter_id=encounter_id, patient_id=patient_id)
 
-    complaint = state.get("chief_complaint", "")
-    keywords = [w.strip().lower() for w in complaint.split() if len(w) > 4]
+    historical_context = list(state.get("historical_context", []))
 
-    relevant_records = await memory_repository.retrieve_context(patient_id, keywords)
+    memory_summary = {
+        "total_past_encounters": len(historical_context),
+        "previous_analysis": state.get("previous_analysis"),
+        "key_historical_updates": [h.get("content") for h in historical_context[-5:]] if historical_context else []
+    }
 
-    history = state.get("execution_history", [])
-    history.append({
-        "step_id": f"step_memory_{len(history)}",
+    execution_history = list(state.get("execution_history", []))
+    execution_history.append({
+        "step_id": f"step_memory_{len(execution_history)}",
         "agent_name": "MemoryAgent",
-        "started_at": datetime.utcnow().isoformat(),
-        "completed_at": datetime.utcnow().isoformat(),
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "completed_at": datetime.now(timezone.utc).isoformat(),
         "status": "SUCCESS",
-        "state_delta_keys": ["memory_context"],
+        "state_delta_keys": ["memory_context", "historical_context"],
         "error_message": None,
     })
 
     return {
-        "memory_context": relevant_records,
-        "execution_history": history,
+        "memory_context": memory_summary,
+        "execution_history": execution_history,
     }

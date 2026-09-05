@@ -401,6 +401,7 @@ export default function UploadCenterPage() {
           </div>
 
           <div
+            data-tour="upload-zone"
             onDragEnter={handleDrag}
             onDragOver={handleDrag}
             onDragLeave={handleDrag}
@@ -427,7 +428,7 @@ export default function UploadCenterPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-brand-card border border-brand-slate/10 p-6 rounded-3xl shadow-xxs flex flex-col gap-4">
+        <div className="lg:col-span-2 bg-brand-card border border-brand-slate/10 p-6 rounded-3xl shadow-xxs flex flex-col gap-4" data-tour="upload-docs">
           <div>
             <h3 className="font-display font-bold text-sm text-brand-plum">Uploaded Documents</h3>
             <p className="text-brand-slate text-xs font-light mt-0.5">Manage and view extraction reports.</p>

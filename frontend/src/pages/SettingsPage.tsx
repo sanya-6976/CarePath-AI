@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePreferences } from '../context/PreferencesContext';
 import type { LanguageType, TextSizeType } from '../context/PreferencesContext';
-import { Globe, Bell, Eye, User, Check, ChevronDown } from 'lucide-react';
+import { Globe, Bell, Eye, User, Check, ChevronDown, Map } from 'lucide-react';
 import { companionService } from '../services/companionService';
 
 export default function SettingsPage() {
@@ -20,7 +20,8 @@ export default function SettingsPage() {
     reducedMotion,
     setReducedMotion,
     highContrast, setHighContrast, voiceResponses, setVoiceResponses,
-    useCarePathHistory, setUseCarePathHistory, simpleMedicalTerms, setSimpleMedicalTerms
+    useCarePathHistory, setUseCarePathHistory, simpleMedicalTerms, setSimpleMedicalTerms,
+    startTour,
   } = usePreferences();
 
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -40,8 +41,8 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    const languageCode = language === 'Hindi' ? 'hi' : 'en';
-    companionService.savePreferences({ language: languageCode, voice_responses: voiceResponses, use_carepath_history: useCarePathHistory, simple_medical_terms: simpleMedicalTerms }).catch(() => undefined);
+    const languageCode = language === 'Hindi' ? 'hi' : language === 'Hinglish' ? 'hl' : 'en';
+    companionService.savePreferences({ language: languageCode as 'en' | 'hi' | 'hl', voice_responses: voiceResponses, use_carepath_history: useCarePathHistory, simple_medical_terms: simpleMedicalTerms }).catch(() => undefined);
   }, [language, voiceResponses, useCarePathHistory, simpleMedicalTerms]);
 
   return (
@@ -59,7 +60,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2" data-tour="language-selector">
           <div>
             <label className="text-sm font-semibold text-brand-plum block">Language</label>
             <span className="text-xs text-brand-slate font-light">Choose the language you prefer for your CarePath experience.</span>
@@ -94,7 +95,7 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section className="bg-brand-card border border-brand-slate/10 rounded-2xl p-6 shadow-xs flex flex-col gap-4">
+      <section className="bg-brand-card border border-brand-slate/10 rounded-2xl p-6 shadow-xs flex flex-col gap-4" data-tour="companion-prefs">
         <div className="flex items-center gap-3 border-b border-brand-slate/10 pb-3">
           <div className="w-8 h-8 rounded-xl bg-brand-lavender-light text-brand-lavender flex items-center justify-center"><Globe className="w-4.5 h-4.5" /></div>
           <div><h2 className="font-display font-bold text-base text-brand-plum">Companion preferences</h2><p className="text-xxs text-brand-slate font-light">Control how CarePath Companion uses your information and voice.</p></div>
@@ -293,6 +294,21 @@ export default function SettingsPage() {
           >
             Manage profile
           </Link>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-brand-slate/5" data-tour="start-tour">
+          <div>
+            <span className="text-sm font-semibold text-brand-plum block">Guided Tour</span>
+            <span className="text-xs text-brand-slate font-light">Take an interactive walkthrough of all CarePath features.</span>
+          </div>
+          <button
+            onClick={startTour}
+            aria-label="Start Guided Tour"
+            className="flex items-center gap-2 px-4 py-2 bg-brand-lavender-light hover:bg-brand-lavender text-brand-lavender hover:text-white rounded-xl text-xs font-semibold shadow-xs transition-all w-full sm:w-auto justify-center"
+          >
+            <Map className="w-4 h-4" />
+            Start Guided Tour
+          </button>
         </div>
       </section>
 

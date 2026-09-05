@@ -179,6 +179,10 @@ class CarePathState(TypedDict):
     care_plan: Optional[CarePlan]
     follow_up: Optional[FollowUpSchedule]
     
+    # 8.5 Shared Patient Context & Grok Critic Review
+    patient_context: Optional[Dict[str, Any]]
+    grok_review: Optional[Dict[str, Any]]
+
     # 9. System Diagnostics & Observability
     alerts: List[AgentAlert]
     execution_history: List[AgentExecutionLog]

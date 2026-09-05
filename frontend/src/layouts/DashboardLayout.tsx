@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { navigationConfig } from '../config/navigation';
 import CarePathCompanion from '../components/CarePathCompanion';
+import GuidedTour from '../components/GuidedTour';
 
 export default function DashboardLayout() {
   const location = useLocation();
@@ -303,6 +304,7 @@ export default function DashboardLayout() {
         </main>
       </div>
       <CarePathCompanion />
+      <GuidedTour />
     </div>
   );
 }

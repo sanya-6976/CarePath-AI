@@ -196,7 +196,7 @@ export default function DashBoardingPage() {
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
       
       {/* 1. GREETING & DAY INDICATOR HEADER */}
-      <div className="flex justify-between items-center flex-wrap gap-4 border-b border-brand-slate/10 pb-4">
+      <div className="flex justify-between items-center flex-wrap gap-4 border-b border-brand-slate/10 pb-4" data-tour="dashboard-summary">
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-brand-plum mb-0.5">
             Good morning, {patientName}
@@ -214,7 +214,7 @@ export default function DashBoardingPage() {
       </div>
 
       {/* 2. NEXT ACTION (Highest Prominence Hero Row) */}
-      <div className="bg-brand-lavender p-6 md:p-8 rounded-3xl shadow-md relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group hover:shadow-lg transition-all duration-300">
+      <div className="bg-brand-lavender p-6 md:p-8 rounded-3xl shadow-md relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group hover:shadow-lg transition-all duration-300" data-tour="quick-actions">
         <div className="absolute top-0 right-0 w-36 h-36 bg-white/5 rounded-full blur-2xl -mr-6 -mt-6 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full blur-xl -ml-6 -mb-6 pointer-events-none" />
 

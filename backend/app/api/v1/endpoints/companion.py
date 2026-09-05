@@ -126,7 +126,12 @@ async def _answer(message: str, context: dict, memory: list[CompanionMessage], l
     try:
         from app.core.ai_client import generate_gemini_json
         prompt = json.dumps({"question": message, "carepath_context": context, "recent_conversation": [{"role": m.role, "content": m.content} for m in memory[-6:]]}, default=str)
-        system = ("You are CarePath Companion, a healthcare-navigation assistant. Answer only from the supplied CarePath context; say information is unavailable when absent. Do not diagnose or override safety warnings. Use simple terms when requested. Return JSON with an 'answer' string. Answer in Hindi." if language == "hi" else "You are CarePath Companion, a healthcare-navigation assistant. Answer only from the supplied CarePath context; say information is unavailable when absent. Do not diagnose or override safety warnings. Use simple terms when requested. Return JSON with an 'answer' string. Answer in English.")
+        if language == "hi":
+            system = "You are CarePath Companion, a healthcare-navigation assistant. Answer only from the supplied CarePath context; say information is unavailable when absent. Do not diagnose or override safety warnings. Use simple terms when requested. Return JSON with an 'answer' string. Answer in Hindi."
+        elif language == "hl":
+            system = "You are CarePath Companion, a healthcare-navigation assistant. Answer only from the supplied CarePath context; say information is unavailable when absent. Do not diagnose or override safety warnings. Return JSON with an 'answer' string. Answer in Hinglish — a natural, conversational mix of Hindi and English as spoken by urban Indians. Do NOT machine-translate; write as a helpful friend would speak."
+        else:
+            system = "You are CarePath Companion, a healthcare-navigation assistant. Answer only from the supplied CarePath context; say information is unavailable when absent. Do not diagnose or override safety warnings. Use simple terms when requested. Return JSON with an 'answer' string. Answer in English."
         result = await generate_gemini_json(prompt, system_instruction=system, temperature=0.1)
         if result and isinstance(result.get("answer"), str) and result["answer"].strip():
             from app.agents.companion_graph import run_companion_workflow
@@ -141,7 +146,9 @@ async def _answer(message: str, context: dict, memory: list[CompanionMessage], l
 async def chat(req: ChatRequest, db: Session = Depends(_get_db), current_user=Depends(get_current_user)):
     if not req.message.strip():
         raise HTTPException(status_code=422, detail="Please enter a message.")
-    language = "hi" if req.language.lower().startswith("hi") else "en"
+    # Accept en / hi / hl (Hinglish)
+    raw_lang = req.language.lower()
+    language = "hi" if raw_lang.startswith("hi") and raw_lang != "hl" else ("hl" if raw_lang == "hl" else "en")
     conversation = None
     if req.conversation_id:
         try:

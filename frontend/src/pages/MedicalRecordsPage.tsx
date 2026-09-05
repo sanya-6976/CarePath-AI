@@ -155,7 +155,7 @@ export default function MedicalRecordsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-300">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-300" data-tour="records-list">
       {error && (
         <div className="bg-brand-rose-bg border border-brand-rose-text/10 text-brand-rose-text p-4 rounded-xl text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">

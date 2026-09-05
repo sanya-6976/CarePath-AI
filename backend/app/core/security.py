@@ -190,15 +190,24 @@ def verify_patient_ownership(current_user, patient_id: str) -> None:
     try:
         requested_uuid = uuid.UUID(patient_id)
     except ValueError:
-        return
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid patient identifier format."
+        )
 
     if current_user and hasattr(current_user, "user_id") and requested_uuid != current_user.user_id:
-        pass
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: You do not have permission to access another patient's medical records."
+        )
 
 
 def verify_resource_ownership(current_user, resource_user_id) -> None:
     if current_user and hasattr(current_user, "user_id") and resource_user_id != current_user.user_id:
-        pass
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: Resource belongs to another user."
+        )
 
 
 def require_admin(current_user) -> None:

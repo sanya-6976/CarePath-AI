@@ -126,7 +126,8 @@ export default function AIInvestigationPage() {
     const startStream = async () => {
       try {
         const token = localStorage.getItem('carepath_token');
-        const BASE_URL = import.meta.env.VITE_API_URL || 'https://carepath-ai-production-508e.up.railway.app';
+        // In dev, prefer local backend; fall back to remote only if VITE_API_URL is explicitly set to remote
+        const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         
         const storedDocsRaw = localStorage.getItem('carepath_uploaded_docs');
         const storedDocs = storedDocsRaw ? JSON.parse(storedDocsRaw) : [];
@@ -361,9 +362,9 @@ export default function AIInvestigationPage() {
       )}
 
       {agentStates ? (
-        <div className="flex flex-col md:flex-row gap-6 items-stretch relative">
+        <div className="flex flex-col md:flex-row gap-6 items-stretch relative" data-tour="agent-pipeline">
           
-          <div className="flex-1 bg-white/60 backdrop-blur-xl border border-white/40 p-6 rounded-3xl shadow-xl shadow-brand-slate/5 flex flex-col gap-4">
+          <div className="flex-1 bg-white/60 backdrop-blur-xl border border-white/40 p-6 rounded-3xl shadow-xl shadow-brand-slate/5 flex flex-col gap-4" data-tour="agent-progress">
             <div className="flex items-center gap-3 pb-3 border-b border-brand-slate/10">
               <div className="p-2 rounded-xl bg-white shadow-sm text-brand-slate border border-brand-slate/10">
                 <Database className="w-5 h-5" />

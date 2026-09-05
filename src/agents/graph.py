@@ -15,6 +15,7 @@ from src.agents.nodes.clinical_reasoning import clinical_reasoning_node
 from src.agents.nodes.referral import referral_node
 from src.agents.nodes.care_plan import care_plan_node
 from src.agents.nodes.follow_up import follow_up_node
+from src.agents.nodes.groq_reviewer import groq_reviewer_node
 from src.core.logging import logger
 
 
@@ -38,6 +39,7 @@ def build_carepath_graph():
     builder.add_node("referral",           referral_node)
     builder.add_node("care_plan",          care_plan_node)
     builder.add_node("follow_up",          follow_up_node)
+    builder.add_node("groq_reviewer",      groq_reviewer_node)
 
     # Entry point
     builder.set_entry_point("supervisor")
@@ -46,7 +48,7 @@ def build_carepath_graph():
     for node in [
         "safety", "intake", "vision", "docs", "medication", "memory",
         "doctor_bridge", "timeline", "evidence", "clinical_reasoning",
-        "referral", "care_plan", "follow_up",
+        "referral", "care_plan", "follow_up", "groq_reviewer",
     ]:
         builder.add_edge(node, "supervisor")
 
@@ -68,6 +70,7 @@ def build_carepath_graph():
             "referral":           "referral",
             "care_plan":          "care_plan",
             "follow_up":          "follow_up",
+            "groq_reviewer":      "groq_reviewer",
             "__end__":            END,
         },
     )

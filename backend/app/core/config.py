@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 10
     ALLOWED_UPLOAD_EXTENSIONS: List[str] = [".pdf", ".jpg", ".jpeg", ".png", ".txt"]
 
+    # AI Model Provider Settings
+    GEMINI_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "groq/compound"
+    GROQ_API_URL: str = "https://api.groq.com/openai/v1/chat/completions"
+
     @field_validator("CORS_ORIGINS", "BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:

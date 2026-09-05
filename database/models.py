@@ -431,3 +431,22 @@ class UserPreference(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     user = relationship("User", back_populates="preferences")
+
+
+class AIReview(Base):
+    __tablename__ = 'ai_reviews'
+
+    review_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    encounter_id = Column(UUID(as_uuid=True), nullable=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id'), nullable=True)
+    reviewer_provider = Column(String(50), nullable=False, default='groq')
+    reviewer_model = Column(String(100), nullable=False, default='llama-3.3-70b-versatile')
+    review_status = Column(String(30), nullable=False, default='pass')
+    safety_concerns = Column(Text, nullable=True)
+    contradictions = Column(Text, nullable=True)
+    missing_information = Column(Text, nullable=True)
+    unsupported_claims = Column(Text, nullable=True)
+    recommended_changes = Column(Text, nullable=True)
+    review_summary = Column(Text, nullable=True)
+    confidence = Column(Numeric(3, 2), default=1.0)
+    created_at = Column(DateTime, default=datetime.utcnow)

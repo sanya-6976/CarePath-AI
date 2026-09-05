@@ -274,7 +274,7 @@ export default function TimelinePage() {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-brand-slate/10 pb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-brand-slate/10 pb-4" data-tour="timeline-events">
         <div className="flex flex-wrap gap-2.5">
           {[
             'All',

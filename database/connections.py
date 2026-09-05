@@ -1,7 +1,10 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from supabase import create_client, Client
+try:
+    from supabase import create_client, Client
+except ImportError:
+    create_client, Client = None, None
 from dotenv import load_dotenv, find_dotenv
 
 # Base class for SQLAlchemy models

@@ -98,25 +98,16 @@ def register(credentials: AuthRegister, db: Session = Depends(get_db)):
 
 
 @router.get("/profile")
-def get_profile(db: Session = Depends(get_db)):
+def get_profile(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     """
-    Returns patient profile or demo fallback profile.
+    Returns the authenticated user's own profile.
     """
-    from database.models import User
-    user = db.query(User).first()
-    if user:
-        first_name = user.profile.first_name if user.profile else "User"
-        last_name = user.profile.last_name if user.profile else ""
-        full_name = f"{first_name} {last_name}".strip() or user.email
-        return {
-            "id": str(user.user_id),
-            "email": user.email,
-            "name": full_name,
-            "role": user.role,
-        }
+    first_name = current_user.profile.first_name if getattr(current_user, "profile", None) else "User"
+    last_name = current_user.profile.last_name if getattr(current_user, "profile", None) else ""
+    full_name = f"{first_name} {last_name}".strip() or current_user.email
     return {
-        "id": "demo_user",
-        "email": "demo@carepath.ai",
-        "name": "Demo Patient",
-        "role": "patient",
+        "id": str(current_user.user_id),
+        "email": current_user.email,
+        "name": full_name,
+        "role": current_user.role,
     }
